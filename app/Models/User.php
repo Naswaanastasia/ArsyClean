@@ -2,30 +2,29 @@
 
 namespace App\Models;
 
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'user';
+    protected $table = 'users';
 
     protected $primaryKey = 'id_user';
 
-    // Tabel tidak memiliki kolom updated_at
-    const UPDATED_AT = null;
-
     protected $fillable = [
         'kode_user',
-        'nama_user',
+        'nama',
         'email',
         'password',
         'no_hp',
         'alamat',
         'role',
         'status',
+        'foto',
     ];
 
     protected $hidden = [
@@ -42,11 +41,9 @@ class User extends Authenticatable
 
     public function hasRole(string|array $roles): bool
     {
-        if (is_array($roles)) {
-            return in_array($this->role, $roles);
-        }
-
-        return $this->role === $roles;
+        return is_array($roles)
+            ? in_array($this->role, $roles)
+            : $this->role === $roles;
     }
 
     public function isPelanggan(): bool
