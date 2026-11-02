@@ -16,7 +16,7 @@ class OwnerController extends Controller
     public function dashboard()
     {
         // Total Omzet Keseluruhan
-        $totalOmzet = Pembayaran::where('status_pembayaran', 'Lunas')->sum('jumlah_pembayaran');
+       $totalOmzet = Pembayaran::where('status_pembayaran', 'Lunas')->sum('jumlah_bayar');
 
         // Total Transaksi Selesai
         $totalTransaksi = Pesanan::where('status_pesanan', 'Selesai')->count();
