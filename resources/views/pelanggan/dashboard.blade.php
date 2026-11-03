@@ -3,6 +3,40 @@
 @section('title', 'Dashboard Pelanggan - Laravel ArsyClean')
 
 @section('content')
+
+@if (session('success') || session('error'))
+    <div id="notificationModal"
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4">
+
+        <div class="w-full max-w-sm rounded-2xl bg-white p-7 text-center shadow-2xl">
+
+            <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full
+                {{ session('success') ? 'bg-sky-100' : 'bg-red-100' }}">
+                <span class="text-3xl">
+                    {{ session('success') ? '✓' : '!' }}
+                </span>
+            </div>
+
+            <h3 class="mb-2 text-xl font-bold text-slate-800">
+                {{ session('success') ? 'Pesanan Berhasil!' : 'Pesanan Gagal!' }}
+            </h3>
+
+            <p class="mb-6 text-sm text-slate-500">
+                {{ session('success') 
+                    ? 'Pesanan kamu berhasil dibuat. Silakan pantau statusnya melalui dashboard.'
+                    : session('error') }}
+            </p>
+
+            <button type="button"
+                    onclick="document.getElementById('notificationModal').remove()"
+                    class="w-full rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white hover:bg-sky-600">
+                OK
+            </button>
+
+        </div>
+    </div>
+@endif
+
 <div class="space-y-6">
     <!-- Welcome Hero Banner -->
     <div class="bg-gradient-to-r from-sky-500 to-blue-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">

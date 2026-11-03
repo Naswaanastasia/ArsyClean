@@ -10,22 +10,21 @@ class Pembayaran extends Model
 
     protected $primaryKey = 'id_pembayaran';
 
-    // Tabel pembayaran tidak memiliki kolom updated_at
-    const UPDATED_AT = null;
-
     protected $fillable = [
         'kode_pembayaran',
         'id_pesanan',
+        'id_user',
+        'jumlah_bayar',
         'metode_pembayaran',
         'status_pembayaran',
-        'jumlah_pembayaran',
-        'tanggal_pembayaran',
-        'diverifikasi_oleh',
+        'tanggal_bayar',
+        'bukti_transfer',
+        'verifikator',
     ];
 
     protected $casts = [
-        'tanggal_pembayaran' => 'date',
-        'jumlah_pembayaran' => 'decimal:2',
+        'jumlah_bayar' => 'decimal:2',
+        'tanggal_bayar' => 'datetime',
     ];
 
     public function pesanan()
@@ -34,6 +33,15 @@ class Pembayaran extends Model
             Pesanan::class,
             'id_pesanan',
             'id_pesanan'
+        );
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(
+            User::class,
+            'id_user',
+            'id_user'
         );
     }
 }

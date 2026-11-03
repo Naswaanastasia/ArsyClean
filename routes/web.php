@@ -12,10 +12,12 @@ use App\Http\Middleware\CheckRole;
 // 1. LOGIN DAN REGISTRASI
 // ==========================================
 
-// Halaman login utama.
-Route::get('/', [RoleAuthController::class, 'showPortal'])
-    ->name('login.portal');
+// Halaman utama Landing Page.
+Route::get('/', function () {
+    return view('landing');
+})->name('home');
 
+// Halaman login.
 Route::get('/login', [RoleAuthController::class, 'showPortal'])
     ->name('login');
 
