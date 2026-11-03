@@ -92,9 +92,11 @@ Route::middleware(['auth', CheckRole::class . ':owner'])
     ->name('owner.')
     ->group(function () {
 
+        // 1 & 2. Dashboard, Ringkasan, & Memantau Aktivitas Layanan
         Route::get('/dashboard', [OwnerController::class, 'dashboard'])
             ->name('dashboard');
 
+        // 5. Mengatur Tarif & Status Layanan
         Route::post('/layanan/{idLayanan}', [OwnerController::class, 'updateLayanan'])
             ->name('layanan.update');
     });
