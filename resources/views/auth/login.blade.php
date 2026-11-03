@@ -59,6 +59,7 @@
             <form id="loginForm"
                   action="{{ route('login.process') }}"
                   method="POST"
+                  novalidate
                   class="space-y-5">
 
                 @csrf
@@ -91,6 +92,8 @@
                             type="password"
                             id="password"
                             name="password"
+                            maxlength="8"
+                            maxlength="10"
                             placeholder="Masukkan kata sandi"
                             autocomplete="current-password"
                             class="w-full px-4 py-3 pr-12 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -154,7 +157,7 @@
         <button type="button"
                 id="closeAlert"
                 class="mt-6 w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold transition">
-            Mengerti
+            OK
         </button>
 
     </div>
@@ -259,21 +262,24 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // MENAMPILKAN ERROR DARI LARAVEL
-    const validationErrors = @json($errors->all());
+const validationErrors = @json($errors->all());
 
-    if (validationErrors.length > 0) {
-        showAlert('error', 'Login Gagal', validationErrors[0]);
+if (validationErrors.length > 0) {
+    const errorMessage = validationErrors[0];
+
+    if (errorMessage.toLowerCase().includes('email')) {
+        showAlert('error', 'Email Tidak Sesuai', errorMessage);
+    } else if (errorMessage.toLowerCase().includes('password')) {
+        showAlert('error', 'Password Tidak Sesuai', errorMessage);
+    } else {
+        showAlert('error', 'Login Gagal', errorMessage);
     }
+}
 
-    // PESAN ERROR DARI SESSION
-    @if (session('error'))
-        showAlert('error', 'Login Gagal', @json(session('error')));
-    @endif
-
-    // PESAN SUKSES DARI SESSION JIKA HALAMAN INI MENERIMANYA
-    @if (session('success'))
-        showAlert('success', 'Berhasil!', @json(session('success')));
-    @endif
+// PESAN SUKSES DARI SESSION
+@if (session('success'))
+    showAlert('success', 'Berhasil!', @json(session('success')));
+@endif
 
 });
 </script>

@@ -292,10 +292,10 @@
         </div>
 
         <form action="{{ route('pelanggan.pesanan.store') }}"
-              method="POST"
-              id="orderForm"
-              class="space-y-4 text-sm">
-
+            method="POST"
+            id="orderForm"
+            novalidate
+            class="space-y-4 text-sm">
             @csrf
 
             <!-- Pilihan Layanan -->

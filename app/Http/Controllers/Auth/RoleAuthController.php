@@ -50,58 +50,66 @@ class RoleAuthController extends Controller
         return view('auth.login');
     }
 
-    // PROSES LOGIN
-    public function processLogin(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+// PROSES LOGIN
+public function processLogin(Request $request)
+{
+   $request->validate([
+    'email' => 'required|email',
+    'password' => 'required|string|min:6|max:10',
+], [
+    'email.required' => 'Silakan masukkan alamat email.',
+    'email.email' => 'Masukkan email yang benar.',
+    'password.required' => 'Silakan masukkan password.',
+    'password.min' => 'Password minimal 6 karakter.',
+    'password.max' => 'Password maksimal 10 karakter.',
+]);
 
-        $user = User::where('email', $request->email)->first();
+    $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
-            return back()
-                ->withInput($request->only('email'))
-                ->withErrors([
-                    'email' => 'Email belum terdaftar.'
-                ]);
-        }
-
-        if ($user->status !== 'aktif') {
-            return back()
-                ->withInput($request->only('email'))
-                ->withErrors([
-                    'email' => 'Akun kamu tidak aktif.'
-                ]);
-        }
-
-        if (!Hash::check($request->password, $user->password)) {
-            return back()
-                ->withInput($request->only('email'))
-                ->withErrors([
-                    'password' => 'Password salah.'
-                ]);
-        }
-
-        if (!in_array($user->role, ['pelanggan', 'admin', 'owner'])) {
-            return back()
-                ->withErrors([
-                    'email' => 'Role akun tidak dikenali.'
-                ]);
-        }
-
-        // LOGIN PENGGUNA
-        Auth::login($user);
-
-        // MEMPERBARUI SESSION
-        $request->session()->regenerate();
-
-        // ARAHKAN SESUAI ROLE
-        return $this->redirectBasedOnRole(Auth::user()->role)
-            ->with('login_berhasil', 'Selamat datang di ArsyClean!');
+    // EMAIL TIDAK TERDAFTAR
+    if (!$user) {
+        return back()
+            ->withInput($request->only('email'))
+            ->withErrors([
+                'email' => 'Masukkan email yang benar. Email belum terdaftar.'
+            ]);
     }
 
+    // AKUN TIDAK AKTIF
+    if ($user->status !== 'aktif') {
+        return back()
+            ->withInput($request->only('email'))
+            ->withErrors([
+                'email' => 'Akun kamu tidak aktif.'
+            ]);
+    }
+
+    // PASSWORD SALAH
+    if (!Hash::check($request->password, $user->password)) {
+        return back()
+            ->withInput($request->only('email'))
+            ->withErrors([
+                'password' => 'Password tidak sesuai.'
+            ]);
+    }
+
+    // ROLE TIDAK DIKENALI
+    if (!in_array($user->role, ['pelanggan', 'admin', 'owner'])) {
+        return back()
+            ->withErrors([
+                'email' => 'Role akun tidak dikenali.'
+            ]);
+    }
+
+    // LOGIN PENGGUNA
+    Auth::login($user);
+
+    $request->session()->regenerate();
+
+    // ARAHKAN SESUAI ROLE
+    return $this->redirectBasedOnRole(Auth::user()->role)
+        ->with('login_berhasil', 'Selamat datang di ArsyClean!');
+}
     // HALAMAN REGISTER
     public function showRegister()
     {
@@ -120,7 +128,7 @@ class RoleAuthController extends Controller
             'email' => 'required|email|max:50|unique:user,email',
             'no_hp' => 'required|string|max:15',
             'alamat' => 'required|string',
-            'password' => 'required|string|min:6',
+           'password' => 'required|string|min:6|max:10',
         ], [
             'nama.required' => 'Nama wajib diisi.',
             'email.required' => 'Email wajib diisi.',
@@ -130,6 +138,7 @@ class RoleAuthController extends Controller
             'alamat.required' => 'Alamat wajib diisi.',
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal 6 karakter.',
+            'password.max' => 'Password maksimal 10 karakter.',
         ]);
 
         $nextId = (int) User::max('id_user') + 1;

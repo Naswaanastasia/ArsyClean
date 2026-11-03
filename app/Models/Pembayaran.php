@@ -30,15 +30,12 @@ class Pembayaran extends Model
         'midtrans_response',
     ];
 
-    protected $casts = [
-        'tanggal_bayar' => 'datetime',
-<<<<<<< HEAD
-        'jumlah_bayar' => 'decimal:2',
-=======
-        'waktu_kedaluwarsa' => 'datetime',
-        'midtrans_response' => 'array',
->>>>>>> 9da5eb4 (Update fitur pembayaran QRIS ArsyClean)
-    ];
+   protected $casts = [
+    'tanggal_bayar' => 'datetime',
+    'jumlah_bayar' => 'decimal:2',
+    'waktu_kedaluwarsa' => 'datetime',
+    'midtrans_response' => 'array',
+];
 
     public function pesanan()
     {

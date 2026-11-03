@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
 
-        // Meredirect user yang SUDAH login ketika mencoba mengakses route 'guest' (seperti /login)
+        // Meredirect user yang sudah login ketika mengakses halaman guest.
         $middleware->redirectUsersTo(function (Request $request) {
             $user = $request->user();
 
@@ -34,7 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return '/';
         });
 
-        // Pembayaran QRIS Midtrans 
+        // Pengecualian CSRF untuk notifikasi pembayaran Midtrans.
         $middleware->validateCsrfTokens(except: [
             'midtrans/notification',
         ]);
