@@ -56,22 +56,23 @@
 </div>
     </nav>
 
-    <!-- Flash Notifications -->
-    @if(session('success'))
-        <div class="max-w-7xl mx-auto px-4 mt-4 w-full">
-            <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center justify-between">
-                <span>{{ session('success') }}</span>
-            </div>
+    
+<!-- Flash Notifications -->
+@if(session('success'))
+    <div id="flash-success" class="max-w-7xl mx-auto px-4 mt-4 w-full transition-all duration-500">
+        <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl">
+            {{ session('success') }}
         </div>
-    @endif
+    </div>
+@endif
 
-    @if(session('error'))
-        <div class="max-w-7xl mx-auto px-4 mt-4 w-full">
-            <div class="p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl flex items-center justify-between">
-                <span>{{ session('error') }}</span>
-            </div>
+@if(session('error'))
+    <div id="flash-error" class="max-w-7xl mx-auto px-4 mt-4 w-full transition-all duration-500">
+        <div class="p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl">
+            {{ session('error') }}
         </div>
-    @endif
+    </div>
+@endif
 
     <!-- Main Content -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
@@ -82,6 +83,30 @@
     <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
         
     </footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const notifications = [
+            document.getElementById('flash-success'),
+            document.getElementById('flash-error')
+        ];
+
+        notifications.forEach(function (notification) {
+            if (notification) {
+                setTimeout(function () {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateY(-10px)';
+
+                    setTimeout(function () {
+                        notification.remove();
+                    }, 500);
+                }, 3000);
+            }
+        });
+    });
+</script>
+</body>
+</html>
 
 </body>
 </html>
