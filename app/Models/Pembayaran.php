@@ -23,8 +23,8 @@ class Pembayaran extends Model
     ];
 
     protected $casts = [
-        'jumlah_bayar' => 'decimal:2',
         'tanggal_bayar' => 'datetime',
+        'jumlah_bayar' => 'decimal:2',
     ];
 
     public function pesanan()

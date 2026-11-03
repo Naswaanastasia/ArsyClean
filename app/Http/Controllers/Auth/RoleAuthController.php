@@ -99,7 +99,7 @@ class RoleAuthController extends Controller
 
         // ARAHKAN SESUAI ROLE
         return $this->redirectBasedOnRole(Auth::user()->role)
-    ->with('login_berhasil', 'Selamat datang di ArsyClean!');
+            ->with('login_berhasil', 'Selamat datang di ArsyClean!');
     }
 
     // HALAMAN REGISTER
@@ -156,9 +156,10 @@ class RoleAuthController extends Controller
 
         $request->session()->regenerate();
 
-return redirect()->route('pelanggan.dashboard')
-    ->with('login_berhasil', 'Pendaftaran berhasil. Selamat datang di ArsyClean!');
+        return redirect()->route('pelanggan.dashboard')
+            ->with('login_berhasil', 'Pendaftaran berhasil. Selamat datang di ArsyClean!');
     }
+
     // LOGOUT
     public function logout(Request $request)
     {
@@ -168,7 +169,7 @@ return redirect()->route('pelanggan.dashboard')
         $request->session()->regenerateToken();
 
         return redirect()->route('login')
-        ->with('success', 'Kamu berhasil logout.');
+            ->with('success', 'Kamu berhasil logout.');
     }
 
     // PENGALIHAN DASHBOARD BERDASARKAN ROLE

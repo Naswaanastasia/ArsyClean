@@ -8,41 +8,60 @@ use App\Http\Controllers\OwnerController;
 use App\Http\Middleware\CheckRole;
 
 // ==========================================
-// 1. LOGIN DAN REGISTRASI
+// 1. LANDING PAGE
 // ==========================================
-
 Route::get('/', function () {
     return view('landing');
 })->name('home');
 
-Route::get('/login', [RoleAuthController::class, 'showPortal'])
-    ->name('login');
 
-Route::post('/login', [RoleAuthController::class, 'processLogin'])
-    ->name('login.process');
+// ==========================================
+// 2. KHUSUS GUEST (BELUM LOGIN)
+// ==========================================
+Route::middleware('guest')->group(function () {
 
-Route::get('/login/pelanggan', [RoleAuthController::class, 'showLoginPelanggan'])
-    ->name('login.pelanggan');
+    // Form Login Utama
+    Route::get('/login', [RoleAuthController::class, 'showPortal'])
+        ->name('login');
 
-Route::get('/login/admin', [RoleAuthController::class, 'showLoginAdmin'])
-    ->name('login.admin');
+    // Proses Login
+    Route::post('/login', [RoleAuthController::class, 'processLogin'])
+        ->name('login.process');
 
-Route::get('/login/owner', [RoleAuthController::class, 'showLoginOwner'])
-    ->name('login.owner');
+    // Halaman Login Per Role
+    Route::get('/login/pelanggan', [RoleAuthController::class, 'showLoginPelanggan'])
+        ->name('login.pelanggan');
 
-Route::get('/register', [RoleAuthController::class, 'showRegister'])
-    ->name('register');
+    Route::get('/login/admin', [RoleAuthController::class, 'showLoginAdmin'])
+        ->name('login.admin');
 
-Route::post('/register', [RoleAuthController::class, 'processRegister'])
-    ->name('register.process');
+    Route::get('/login/owner', [RoleAuthController::class, 'showLoginOwner'])
+        ->name('login.owner');
 
-Route::post('/logout', [RoleAuthController::class, 'logout'])->name('logout');
+    // Registrasi Pelanggan
+    Route::get('/register', [RoleAuthController::class, 'showRegister'])
+        ->name('register');
+
+    Route::post('/register', [RoleAuthController::class, 'processRegister'])
+        ->name('register.process');
+});
 
 
 // ==========================================
-// 2. DASHBOARD DAN FITUR PELANGGAN
+// 3. LOGOUT (KHUSUS PENGGUNA YANG SUDAH LOGIN)
 // ==========================================
+Route::middleware('auth')->group(function () {
 
+    Route::post('/logout', [RoleAuthController::class, 'logout'])
+        ->name('logout');
+
+    Route::get('/logout', [RoleAuthController::class, 'logout']);
+});
+
+
+// ==========================================
+// 4. DASHBOARD DAN FITUR PELANGGAN
+// ==========================================
 Route::middleware(['auth', CheckRole::class . ':pelanggan'])
     ->prefix('pelanggan')
     ->name('pelanggan.')
@@ -60,9 +79,8 @@ Route::middleware(['auth', CheckRole::class . ':pelanggan'])
 
 
 // ==========================================
-// 3. DASHBOARD DAN FITUR ADMIN
+// 5. DASHBOARD DAN FITUR ADMIN
 // ==========================================
-
 Route::middleware(['auth', CheckRole::class . ':admin'])
     ->prefix('admin')
     ->name('admin.')
@@ -93,7 +111,6 @@ Route::middleware(['auth', CheckRole::class . ':admin'])
         // ----------------------------------
         // B. PEMBAYARAN
         // ----------------------------------
-
         Route::post('/pembayaran/{idPembayaran}/verifikasi', [AdminController::class, 'verifikasiPembayaran'])
             ->name('pembayaran.verifikasi');
 
@@ -101,7 +118,6 @@ Route::middleware(['auth', CheckRole::class . ':admin'])
         // ----------------------------------
         // C. PENGELOLAAN STOK
         // ----------------------------------
-
         Route::post('/stok/{idStok}', [AdminController::class, 'updateStok'])
             ->name('stok.update');
 
@@ -117,22 +133,22 @@ Route::middleware(['auth', CheckRole::class . ':admin'])
         // Memperbarui status pengiriman
         Route::post('/pengiriman/{idPengiriman}/status', [AdminController::class, 'updateStatusPengiriman'])
             ->name('pengiriman.status');
-
     });
 
 
 // ==========================================
-// 4. DASHBOARD DAN FITUR OWNER
+// 6. DASHBOARD DAN FITUR OWNER
 // ==========================================
-
 Route::middleware(['auth', CheckRole::class . ':owner'])
     ->prefix('owner')
     ->name('owner.')
     ->group(function () {
 
+        // Dashboard, Ringkasan, dan Memantau Aktivitas Layanan
         Route::get('/dashboard', [OwnerController::class, 'dashboard'])
             ->name('dashboard');
 
+        // Mengatur Tarif dan Status Layanan
         Route::post('/layanan/{idLayanan}', [OwnerController::class, 'updateLayanan'])
             ->name('layanan.update');
     });
