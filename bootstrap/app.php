@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,8 +16,25 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
+
+        // Meredirect user yang SUDAH login ketika mencoba mengakses route 'guest' (seperti /login)
+        $middleware->redirectUsersTo(function (Request $request) {
+            $user = $request->user();
+
+            if ($user) {
+                if ($user->role === 'admin') {
+                    return route('admin.dashboard');
+                } elseif ($user->role === 'owner') {
+                    return route('owner.dashboard');
+                } elseif ($user->role === 'pelanggan') {
+                    return route('pelanggan.dashboard');
+                }
+            }
+
+            return '/';
+        });
+
         $middleware->validateCsrfTokens(except: [
-            // Bisa tambahkan route pengecualian csrf jika diperlukan testing
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

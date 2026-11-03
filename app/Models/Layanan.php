@@ -41,12 +41,3 @@ class Layanan extends Model
         )->withTimestamps();
     }
 }
-use App\Http\Controllers\Api\PelangganApiController;
-
-Route::prefix('pelanggan')->group(function () {
-    Route::get('/layanan', [PelangganApiController::class, 'getLayanan']);
-    Route::post('/pesanan', [PelangganApiController::class, 'createPesanan']);
-    Route::get('/pesanan/riwayat/{userId}', [PelangganApiController::class, 'getRiwayatPesanan']);
-    Route::post('/pembayaran', [PelangganApiController::class, 'uploadPembayaran']);
-    Route::post('/ulasan', [PelangganApiController::class, 'kirimUlasan']);
-});
