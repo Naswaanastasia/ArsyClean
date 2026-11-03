@@ -20,11 +20,24 @@ class Pembayaran extends Model
         'tanggal_bayar',
         'bukti_transfer',
         'verifikator',
+
+        // Data Midtrans
+        'midtrans_order_id',
+        'midtrans_transaction_id',
+        'qr_code_url',
+        'midtrans_transaction_status',
+        'waktu_kedaluwarsa',
+        'midtrans_response',
     ];
 
     protected $casts = [
         'tanggal_bayar' => 'datetime',
+<<<<<<< HEAD
         'jumlah_bayar' => 'decimal:2',
+=======
+        'waktu_kedaluwarsa' => 'datetime',
+        'midtrans_response' => 'array',
+>>>>>>> 9da5eb4 (Update fitur pembayaran QRIS ArsyClean)
     ];
 
     public function pesanan()

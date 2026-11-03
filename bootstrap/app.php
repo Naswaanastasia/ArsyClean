@@ -35,6 +35,10 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $middleware->validateCsrfTokens(except: [
+<<<<<<< HEAD
+=======
+    'midtrans/notification',
+>>>>>>> 9da5eb4 (Update fitur pembayaran QRIS ArsyClean)
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

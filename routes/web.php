@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MidtransWebhookController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RoleAuthController;
 use App\Http\Controllers\PelangganController;
@@ -7,6 +8,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Middleware\CheckRole;
 
+Route::post('/midtrans/notification', [
+    MidtransWebhookController::class,
+    'handle'
+])->name('midtrans.notification');
 // ==========================================
 // 1. LANDING PAGE
 // ==========================================
