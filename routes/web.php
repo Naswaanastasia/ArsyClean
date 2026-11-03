@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -101,9 +100,22 @@ Route::middleware(['auth', CheckRole::class . ':owner'])
     ->name('owner.')
     ->group(function () {
 
+        // 1 & 2. Dashboard, Ringkasan, & Memantau Aktivitas Layanan
         Route::get('/dashboard', [OwnerController::class, 'dashboard'])
             ->name('dashboard');
 
+        // 5. Mengatur Tarif & Status Layanan
         Route::post('/layanan/{idLayanan}', [OwnerController::class, 'updateLayanan'])
             ->name('layanan.update');
+
+        // 4. Memeriksa & Cetak Laporan PDF
+        Route::get('/cetak-laporan', [OwnerController::class, 'cetakLaporanPdf'])
+            ->name('cetak.laporan');
+
+        // 6. Mengelola Akun Admin (Tambah & Hapus/Nonaktifkan)
+        Route::post('/admin', [OwnerController::class, 'storeAdmin'])
+            ->name('admin.store');
+
+        Route::delete('/admin/{idAdmin}', [OwnerController::class, 'destroyAdmin'])
+            ->name('admin.destroy');
     });
