@@ -11,19 +11,16 @@ class Pesanan extends Model
     protected $primaryKey = 'id_pesanan';
 
     protected $fillable = [
-    'kode_pesanan',
-    'id_user',
-    'tanggal_pesanan',
-    'waktu_jemput',
-    'total_harga',
-    'total_biaya',
-    'status_pesanan',
-    'status_laundry',
-    'metode_pembayaran',
-    'alamat_jemput',
-    'alamat_penjemputan',
-    'catatan',
-];
+        'kode_pesanan',
+        'id_user',
+        'tanggal_pesanan',
+        'total_harga',
+        'status_pesanan',
+        'status_laundry',
+        'metode_pembayaran',
+        'alamat_penjemputan',
+        'catatan',
+    ];
 
     protected $casts = [
         'tanggal_pesanan' => 'datetime',
@@ -32,7 +29,11 @@ class Pesanan extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'id_user', 'id_user');
+        return $this->belongsTo(
+            User::class,
+            'id_user',
+            'id_user'
+        );
     }
 
     public function layanan()
@@ -42,26 +43,47 @@ class Pesanan extends Model
             'pesanan_layanan',
             'id_pesanan',
             'id_layanan'
-        )->withPivot('id_detail', 'jumlah', 'subtotal');
+        )->withPivot(
+            'id_detail',
+            'jumlah',
+            'harga_satuan',
+            'subtotal'
+        )->withTimestamps();
     }
 
     public function pembayaran()
     {
-        return $this->hasOne(Pembayaran::class, 'id_pesanan', 'id_pesanan');
+        return $this->hasOne(
+            Pembayaran::class,
+            'id_pesanan',
+            'id_pesanan'
+        );
     }
 
     public function pengiriman()
     {
-        return $this->hasOne(Pengiriman::class, 'id_pesanan', 'id_pesanan');
+        return $this->hasOne(
+            Pengiriman::class,
+            'id_pesanan',
+            'id_pesanan'
+        );
     }
 
     public function ulasan()
     {
-        return $this->hasOne(Ulasan::class, 'id_pesanan', 'id_pesanan');
+        return $this->hasOne(
+            Ulasan::class,
+            'id_pesanan',
+            'id_pesanan'
+        );
     }
 
     public function penggunaanMesin()
     {
-        return $this->hasMany(PenggunaanMesin::class, 'id_pesanan', 'id_pesanan');
+        return $this->hasMany(
+            PenggunaanMesin::class,
+            'id_pesanan',
+            'id_pesanan'
+        );
     }
 }
