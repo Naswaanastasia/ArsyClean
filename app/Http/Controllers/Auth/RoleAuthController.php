@@ -159,20 +159,16 @@ class RoleAuthController extends Controller
 return redirect()->route('pelanggan.dashboard')
     ->with('login_berhasil', 'Pendaftaran berhasil. Selamat datang di ArsyClean!');
     }
-
     // LOGOUT
     public function logout(Request $request)
     {
         Auth::guard('web')->logout();
 
-        // MENGHAPUS SESSION LOGIN LAMA
         $request->session()->invalidate();
-
-        // MEMBUAT TOKEN CSRF BARU
         $request->session()->regenerateToken();
 
-        return redirect()->route('login.portal')
-            ->with('success', 'Kamu berhasil logout.');
+        return redirect()->route('login')
+        ->with('success', 'Kamu berhasil logout.');
     }
 
     // PENGALIHAN DASHBOARD BERDASARKAN ROLE
@@ -182,7 +178,7 @@ return redirect()->route('pelanggan.dashboard')
             'pelanggan' => redirect()->route('pelanggan.dashboard'),
             'admin' => redirect()->route('admin.dashboard'),
             'owner' => redirect()->route('owner.dashboard'),
-            default => redirect()->route('login.portal'),
+            default => redirect()->route('login'),
         };
     }
 }

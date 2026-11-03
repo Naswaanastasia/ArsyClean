@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -12,20 +11,16 @@ use App\Http\Middleware\CheckRole;
 // 1. LOGIN DAN REGISTRASI
 // ==========================================
 
-// Halaman utama Landing Page.
 Route::get('/', function () {
     return view('landing');
 })->name('home');
 
-// Halaman login.
 Route::get('/login', [RoleAuthController::class, 'showPortal'])
     ->name('login');
 
-// Proses login tanpa memilih role.
 Route::post('/login', [RoleAuthController::class, 'processLogin'])
     ->name('login.process');
 
-// Redirect halaman login lama ke halaman utama.
 Route::get('/login/pelanggan', [RoleAuthController::class, 'showLoginPelanggan'])
     ->name('login.pelanggan');
 
@@ -35,18 +30,14 @@ Route::get('/login/admin', [RoleAuthController::class, 'showLoginAdmin'])
 Route::get('/login/owner', [RoleAuthController::class, 'showLoginOwner'])
     ->name('login.owner');
 
-// Registrasi pelanggan.
 Route::get('/register', [RoleAuthController::class, 'showRegister'])
     ->name('register');
 
 Route::post('/register', [RoleAuthController::class, 'processRegister'])
     ->name('register.process');
 
-// Logout.
-Route::post('/logout', [RoleAuthController::class, 'logout'])
-    ->name('logout');
+Route::post('/logout', [RoleAuthController::class, 'logout'])->name('logout');
 
-Route::get('/logout', [RoleAuthController::class, 'logout']);
 
 // ==========================================
 // 2. DASHBOARD DAN FITUR PELANGGAN
@@ -67,6 +58,7 @@ Route::middleware(['auth', CheckRole::class . ':pelanggan'])
             ->name('ulasan.store');
     });
 
+
 // ==========================================
 // 3. DASHBOARD DAN FITUR ADMIN
 // ==========================================
@@ -76,21 +68,58 @@ Route::middleware(['auth', CheckRole::class . ':admin'])
     ->name('admin.')
     ->group(function () {
 
+        // Dashboard Admin
         Route::get('/dashboard', [AdminController::class, 'dashboard'])
             ->name('dashboard');
 
+
+        // ----------------------------------
+        // A. PENGELOLAAN PESANAN
+        // ----------------------------------
+
+        // Menerima pesanan
+        Route::post('/pesanan/{idPesanan}/terima', [AdminController::class, 'konfirmasiPesanan'])
+            ->name('pesanan.konfirmasi');
+
+        // Menolak pesanan
+        Route::post('/pesanan/{idPesanan}/tolak', [AdminController::class, 'tolakPesanan'])
+            ->name('pesanan.tolak');
+
+        // Memperbarui status laundry
         Route::post('/pesanan/{idPesanan}/status', [AdminController::class, 'updateStatusLaundry'])
             ->name('pesanan.status');
+
+
+        // ----------------------------------
+        // B. PEMBAYARAN
+        // ----------------------------------
 
         Route::post('/pembayaran/{idPembayaran}/verifikasi', [AdminController::class, 'verifikasiPembayaran'])
             ->name('pembayaran.verifikasi');
 
+
+        // ----------------------------------
+        // C. PENGELOLAAN STOK
+        // ----------------------------------
+
         Route::post('/stok/{idStok}', [AdminController::class, 'updateStok'])
             ->name('stok.update');
 
+
+        // ----------------------------------
+        // D. PENGIRIMAN DAN KURIR
+        // ----------------------------------
+
+        // Menambahkan penugasan kurir
         Route::post('/pengiriman', [AdminController::class, 'simpanPengiriman'])
             ->name('pengiriman.store');
+
+        // Memperbarui status pengiriman
+        Route::post('/pengiriman/{idPengiriman}/status', [AdminController::class, 'updateStatusPengiriman'])
+            ->name('pengiriman.status');
+
     });
+
 
 // ==========================================
 // 4. DASHBOARD DAN FITUR OWNER

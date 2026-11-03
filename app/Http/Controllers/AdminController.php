@@ -2,54 +2,116 @@
 
 namespace App\Http\Controllers;
 
+
+
 use App\Models\Pesanan;
 use App\Models\Pembayaran;
 use App\Models\Stok;
 use App\Models\Pengiriman;
-use App\Models\Mesin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
     /**
-     * Dashboard Operasional Admin
+     * DASHBOARD ADMIN
      */
     public function dashboard()
     {
-        // Mengambil data pesanan beserta relasinya
+        // Hanya mengambil pesanan Laundry Reguler
         $pesanans = Pesanan::with([
             'user',
             'layanan',
-            'pembayaran',
-            'pengiriman'
-        ])
-            ->orderBy('id_pesanan', 'desc')
-            ->get();
-
-        // Mengambil seluruh data stok
-        $stoks = Stok::all();
-
-        // Mengambil data pembayaran beserta pesanan dan pelanggan
-        $pembayarans = Pembayaran::with([
-            'pesanan.user'
-        ])
-            ->orderBy('id_pembayaran', 'desc')
-            ->get();
-
-        // Mengambil seluruh data mesin
-        $mesins = Mesin::all();
-
-        return view('admin.dashboard', compact(
-            'pesanans',
-            'stoks',
-            'pembayarans',
-            'mesins'
-        ));
+            'pembayaran'
+            ])
+            ->whereHas('layanan', function ($query) {
+                $query->where('jenis_layanan', 'Reguler');
+                })
+                ->orderBy('id_pesanan', 'desc')
+                ->get();
+                // Mengambil stok bahan baku, tanpa stok koin
+                $stoks = Stok::where('kategori', '!=', 'Koin')->get();
+                
+                // Mengambil data pembayaran pesanan Reguler saja
+                $pembayarans = Pembayaran::with([
+                    'pesanan.user',
+                    'pesanan.layanan'
+                    ])
+                    ->whereHas('pesanan.layanan', function ($query) {
+                        $query->where('jenis_layanan', 'Reguler');
+                        })
+                        ->orderBy('id_pembayaran', 'desc')
+                        ->get();
+                        
+                        return view('admin.dashboard', compact(
+                            'pesanans',
+                            'stoks',
+                            'pembayarans'
+                            ));
     }
 
     /**
-     * Mengubah Status Laundry
+     * MENERIMA PESANAN
+     */
+    public function konfirmasiPesanan($idPesanan)
+    {
+        $pesanan = Pesanan::findOrFail($idPesanan);
+
+        if (in_array($pesanan->status_pesanan, ['Dibatalkan', 'Selesai'])) {
+            return back()->with('error', 'Pesanan tidak dapat diterima.');
+        }
+
+        if ($pesanan->status_pesanan === 'Diproses') {
+            return back()->with('error', 'Pesanan sudah diterima sebelumnya.');
+        }
+
+        $pesanan->status_pesanan = 'Diproses';
+        $pesanan->save();
+
+        return back()->with(
+            'success',
+            "Pesanan {$pesanan->kode_pesanan} berhasil diterima."
+        );
+    }
+
+    /**
+     * MENOLAK PESANAN
+     */
+    public function tolakPesanan(Request $request, $idPesanan)
+    {
+        $request->validate([
+            'alasan' => 'required|string|max:500',
+        ]);
+
+        $pesanan = Pesanan::findOrFail($idPesanan);
+
+        if (in_array($pesanan->status_pesanan, ['Diproses', 'Selesai', 'Dibatalkan'])) {
+            return back()->with(
+                'error',
+                'Pesanan yang sudah diproses tidak dapat ditolak melalui proses ini.'
+            );
+        }
+
+        DB::transaction(function () use ($pesanan, $request) {
+            $pesanan->status_pesanan = 'Dibatalkan';
+
+            $pesanan->catatan = trim(
+                ($pesanan->catatan ?? '') .
+                "\n[Ditolak Admin] " . $request->alasan
+            );
+
+            $pesanan->save();
+        });
+
+        return back()->with(
+            'success',
+            "Pesanan {$pesanan->kode_pesanan} berhasil ditolak."
+        );
+    }
+
+    /**
+     * MEMPERBARUI STATUS LAUNDRY
      */
     public function updateStatusLaundry(Request $request, $idPesanan)
     {
@@ -57,44 +119,137 @@ class AdminController extends Controller
             'status_laundry' => 'required|in:Menunggu Antrean,Pencucian,Pengeringan,Setrika,Siap Diambil,Dalam Pengiriman,Selesai',
         ]);
 
-        $pesanan = Pesanan::findOrFail($idPesanan);
+        $pesanan = Pesanan::with('layanan')->findOrFail($idPesanan);
 
-        $pesanan->status_laundry = $request->status_laundry;
+        if ($pesanan->status_pesanan !== 'Diproses') {
+            return back()->with(
+                'error',
+                'Pesanan harus diterima Admin sebelum diproses.'
+            );
+        }
 
-        if ($request->status_laundry === 'Selesai') {
+        $jenisLayanan = $pesanan->layanan
+            ->pluck('jenis_layanan')
+            ->map(fn($jenis) => strtolower($jenis))
+            ->toArray();
+
+        if (in_array('koin', $jenisLayanan)) {
+            return back()->with(
+                'error',
+                'Laundry Koin tidak menggunakan tahapan pencucian petugas.'
+            );
+        }
+
+        $statusBerikutnya = [
+            'Menunggu Antrean',
+            'Pencucian',
+            'Pengeringan',
+            'Setrika',
+            'Siap Diambil',
+            'Dalam Pengiriman',
+            'Selesai',
+        ];
+
+        $statusSekarang = $pesanan->status_laundry;
+        $statusTujuan = $request->status_laundry;
+
+        // Laundry Reguler tidak menggunakan pengiriman kurir.
+        $isPickup = in_array('antar jemput', $jenisLayanan)
+            || in_array('pickup', $jenisLayanan);
+
+        if (!$isPickup && $statusTujuan === 'Dalam Pengiriman') {
+            return back()->with(
+                'error',
+                'Laundry Reguler tidak menggunakan proses pengiriman kurir.'
+            );
+        }
+
+        $posisiSekarang = array_search($statusSekarang, $statusBerikutnya);
+        $posisiTujuan = array_search($statusTujuan, $statusBerikutnya);
+
+        if ($posisiSekarang === false || $posisiTujuan === false) {
+            return back()->with('error', 'Status laundry tidak valid.');
+        }
+
+        if ($posisiTujuan !== $posisiSekarang + 1) {
+            return back()->with(
+                'error',
+                'Status laundry harus diperbarui secara berurutan.'
+            );
+        }
+
+        $pesanan->status_laundry = $statusTujuan;
+
+        if ($statusTujuan === 'Selesai') {
             $pesanan->status_pesanan = 'Selesai';
-        } else {
-            $pesanan->status_pesanan = 'Diproses';
         }
 
         $pesanan->save();
 
         return back()->with(
             'success',
-            "Status cucian pesanan {$pesanan->kode_pesanan} diperbarui menjadi '{$request->status_laundry}'."
+            "Status pesanan {$pesanan->kode_pesanan} diperbarui menjadi {$statusTujuan}."
         );
     }
 
     /**
-     * Verifikasi Pembayaran Kasir
+     * VERIFIKASI PEMBAYARAN
      */
     public function verifikasiPembayaran($idPembayaran)
     {
-        $pembayaran = Pembayaran::findOrFail($idPembayaran);
+        $pembayaran = Pembayaran::with('pesanan')
+            ->findOrFail($idPembayaran);
 
-        $pembayaran->status_pembayaran = 'Lunas';
-        $pembayaran->diverifikasi_oleh = Auth::user()->nama_user;
+        if ($pembayaran->status_pembayaran !== 'Pending') {
+            return back()->with(
+                'error',
+                'Pembayaran ini sudah tidak berstatus Pending.'
+            );
+        }
 
-        $pembayaran->save();
+        if (!$pembayaran->pesanan) {
+            return back()->with('error', 'Data pesanan tidak ditemukan.');
+        }
+
+        if ($pembayaran->pesanan->status_pesanan === 'Dibatalkan') {
+            return back()->with(
+                'error',
+                'Pembayaran pesanan yang dibatalkan tidak dapat diverifikasi.'
+            );
+        }
+
+        // Memastikan nominal pembayaran sesuai total pesanan.
+        if (
+            round((float) $pembayaran->jumlah_bayar, 2) !==
+            round((float) $pembayaran->pesanan->total_harga, 2)
+        ) {
+            return back()->with(
+                'error',
+                'Nominal pembayaran tidak sesuai dengan total pesanan.'
+            );
+        }
+
+        DB::transaction(function () use ($pembayaran) {
+            $pembayaran->status_pembayaran = 'Lunas';
+            $pembayaran->verifikator = Auth::user()->nama ?? 'Admin';
+            $pembayaran->save();
+
+            if (
+                $pembayaran->pesanan->status_pesanan === 'Menunggu Pembayaran'
+            ) {
+                $pembayaran->pesanan->status_pesanan = 'Menunggu Verifikasi';
+                $pembayaran->pesanan->save();
+            }
+        });
 
         return back()->with(
             'success',
-            "Pembayaran {$pembayaran->kode_pembayaran} berhasil diverifikasi Lunas."
+            "Pembayaran {$pembayaran->kode_pembayaran} berhasil diverifikasi."
         );
     }
 
     /**
-     * Tambah / Perbarui Stok Bahan Baku dan Koin
+     * MEMPERBARUI STOK BAHAN BAKU DAN KOIN
      */
     public function updateStok(Request $request, $idStok)
     {
@@ -121,19 +276,35 @@ class AdminController extends Controller
     }
 
     /**
-     * Input Data Pengiriman Kurir
+     * MENJADWALKAN PENGIRIMAN
      */
     public function simpanPengiriman(Request $request)
     {
         $request->validate([
             'id_pesanan' => 'required|exists:pesanan,id_pesanan',
-            'nama_kurir' => 'required|string',
-            'no_hp_kurir' => 'required|string',
-            'kendaraan' => 'required|string',
+            'nama_kurir' => 'required|string|max:100',
+            'no_hp_kurir' => 'required|string|max:20',
+            'kendaraan' => 'required|string|max:50',
             'alamat_tujuan' => 'required|string',
         ]);
 
-        $nextId = Pengiriman::max('id_pengiriman') + 1;
+        $pesanan = Pesanan::findOrFail($request->id_pesanan);
+
+        if ($pesanan->status_pesanan !== 'Diproses') {
+            return back()->with(
+                'error',
+                'Pesanan harus diterima terlebih dahulu.'
+            );
+        }
+
+        if (Pengiriman::where('id_pesanan', $pesanan->id_pesanan)->exists()) {
+            return back()->with(
+                'error',
+                'Pesanan ini sudah memiliki data pengiriman.'
+            );
+        }
+
+        $nextId = (Pengiriman::max('id_pengiriman') ?? 0) + 1;
 
         $kodePengiriman = 'KIRIM' . str_pad(
             $nextId,
@@ -150,18 +321,64 @@ class AdminController extends Controller
             'kendaraan' => $request->kendaraan,
             'no_resi' => 'RS-' . rand(100000, 999999),
             'alamat_tujuan' => $request->alamat_tujuan,
-            'status_pengiriman' => 'Dalam Perjalanan',
+            'status_pengiriman' => 'Dijadwalkan',
             'tanggal_kirim' => now(),
         ]);
-
-        $pesanan = Pesanan::findOrFail($request->id_pesanan);
-
-        $pesanan->status_laundry = 'Dalam Pengiriman';
-        $pesanan->save();
 
         return back()->with(
             'success',
             "Pengiriman berhasil dijadwalkan dengan kurir {$request->nama_kurir}."
+        );
+    }
+
+    /**
+     * MEMPERBARUI STATUS PENGIRIMAN
+     */
+    public function updateStatusPengiriman(Request $request, $idPengiriman)
+    {
+        $request->validate([
+            'status_pengiriman' => 'required|in:Dijadwalkan,Dalam Perjalanan,Terkirim,Gagal',
+        ]);
+
+        $pengiriman = Pengiriman::findOrFail($idPengiriman);
+
+        $urutanStatus = [
+            'Dijadwalkan',
+            'Dalam Perjalanan',
+            'Terkirim',
+        ];
+
+        $statusSekarang = $pengiriman->status_pengiriman;
+        $statusTujuan = $request->status_pengiriman;
+
+        if ($statusTujuan === 'Gagal') {
+            if (in_array($statusSekarang, ['Terkirim', 'Gagal'])) {
+                return back()->with(
+                    'error',
+                    'Status pengiriman tidak dapat diubah.'
+                );
+            }
+        } else {
+            $posisiSekarang = array_search($statusSekarang, $urutanStatus);
+            $posisiTujuan = array_search($statusTujuan, $urutanStatus);
+
+            if (
+                $posisiSekarang === false ||
+                $posisiTujuan !== $posisiSekarang + 1
+            ) {
+                return back()->with(
+                    'error',
+                    'Status pengiriman harus diperbarui secara berurutan.'
+                );
+            }
+        }
+
+        $pengiriman->status_pengiriman = $statusTujuan;
+        $pengiriman->save();
+
+        return back()->with(
+            'success',
+            "Status pengiriman berhasil diperbarui menjadi {$statusTujuan}."
         );
     }
 }

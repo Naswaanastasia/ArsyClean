@@ -43,11 +43,9 @@
             </div>
 
             <!-- Tombol Logout saja -->
-            <form action="{{ route('logout') }}" method="POST" class="inline">
+            <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="px-3 py-1.5 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 border border-slate-200 rounded-xl text-xs font-semibold">
-                    Logout
-                </button>
+                <button type="submit" class="btn btn-danger">Logout</button>
             </form>
         </div>
     @else
