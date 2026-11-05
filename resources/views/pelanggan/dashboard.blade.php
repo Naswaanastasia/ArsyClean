@@ -292,10 +292,10 @@
         </div>
 
         <form action="{{ route('pelanggan.pesanan.store') }}"
-            method="POST"
-            id="orderForm"
-            novalidate
-            class="space-y-4 text-sm">
+        method="POST"
+        id="orderForm"
+        novalidate
+        class="space-y-4 text-sm">
             @csrf
 
             <!-- Pilihan Layanan -->
@@ -565,6 +565,28 @@
         </form>
     </div>
 </div>
+<!-- Modal Peringatan Validasi -->
+<div id="alertModal"
+     class="hidden fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-3xl max-w-sm w-full p-7 text-center shadow-2xl">
+        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+            <span class="text-3xl">⚠️</span>
+        </div>
+
+        <h3 id="alertTitle" class="mb-2 text-xl font-bold text-slate-800">
+            Perhatian
+        </h3>
+
+        <p id="alertMessage" class="mb-6 text-sm text-slate-500"></p>
+
+        <button type="button"
+                onclick="closeAlert()"
+                class="w-full rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white hover:bg-sky-600">
+            Mengerti
+        </button>
+    </div>
+</div>
 
 <script>
     const clothingInputs = document.querySelectorAll('.clothing-quantity');
@@ -572,7 +594,15 @@
     function openOrderModal() {
         document.getElementById('orderModal').classList.remove('hidden');
     }
+function showAlert(message, title = 'Perhatian') {
+    document.getElementById('alertTitle').innerText = title;
+    document.getElementById('alertMessage').innerText = message;
+    document.getElementById('alertModal').classList.remove('hidden');
+}
 
+function closeAlert() {
+    document.getElementById('alertModal').classList.add('hidden');
+}
     function closeOrderModal() {
         document.getElementById('orderModal').classList.add('hidden');
     }
@@ -715,7 +745,7 @@
 
         if (!select.value) {
             event.preventDefault();
-            alert('Silakan pilih jenis layanan terlebih dahulu.');
+           showAlert('Silakan pilih jenis layanan terlebih dahulu.');
             return;
         }
 
@@ -723,7 +753,7 @@
 
         if (!jumlah || parseFloat(jumlah) <= 0) {
             event.preventDefault();
-            alert('Silakan isi jumlah pakaian atau barang terlebih dahulu.');
+            showAlert('Silakan isi jumlah pakaian atau barang terlebih dahulu.');
             return;
         }
 
@@ -740,7 +770,7 @@
 
             if (totalPcs < 1) {
                 event.preventDefault();
-                alert('Masukkan minimal satu pakaian.');
+                showAlert('Masukkan minimal satu pakaian.');
                 return;
             }
         }
@@ -753,7 +783,7 @@
 
             if (!Number.isInteger(qty) || qty < 1) {
                 event.preventDefault();
-                alert('Jumlah barang harus berupa angka bulat minimal 1 pcs.');
+                showAlert('Jumlah barang harus berupa angka bulat minimal 1 pcs.');
                 return;
             }
         }

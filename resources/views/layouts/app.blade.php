@@ -23,7 +23,6 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="font-extrabold text-lg text-slate-900">ArsyClean</span>
-                        </span>
                     </div>
                 </div>
             </div>
@@ -54,21 +53,43 @@
 </div>
     </nav>
 
-    
-<!-- Flash Notifications -->
-@if(session('success'))
-    <div id="flash-success" class="max-w-7xl mx-auto px-4 mt-4 w-full transition-all duration-500">
-        <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl">
-            {{ session('success') }}
+    <!-- POP-UP LOGIN BERHASIL -->
+@if(session('login_berhasil'))
+<div id="loginSuccessModal"
+     class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 p-4">
+
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-7 text-center">
+
+        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-3xl bg-green-100 text-green-600">
+            ✓
         </div>
+
+        <h3 class="text-xl font-bold text-slate-800 mb-2">
+            Login Berhasil!
+        </h3>
+
+        <p class="text-sm text-slate-500 leading-relaxed">
+            {{ session('login_berhasil') }}
+        </p>
+
+        <button type="button" id="closeLoginSuccess"
+                class="mt-6 w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold">
+            OK
+        </button>
+
+    </div>
+</div>
+@endif
+
+@if(session('success'))
+    <div class="max-w-7xl mx-auto px-4 mt-4 w-full">
+        {{ session('success') }}
     </div>
 @endif
 
 @if(session('error'))
-    <div id="flash-error" class="max-w-7xl mx-auto px-4 mt-4 w-full transition-all duration-500">
-        <div class="p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl">
-            {{ session('error') }}
-        </div>
+    <div class="max-w-7xl mx-auto px-4 mt-4 w-full">
+        {{ session('error') }}
     </div>
 @endif
 
@@ -83,28 +104,18 @@
     </footer>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const notifications = [
-            document.getElementById('flash-success'),
-            document.getElementById('flash-error')
-        ];
+document.addEventListener('DOMContentLoaded', function () {
 
-        notifications.forEach(function (notification) {
-            if (notification) {
-                setTimeout(function () {
-                    notification.style.opacity = '0';
-                    notification.style.transform = 'translateY(-10px)';
+    const modal = document.getElementById('loginSuccessModal');
+    const closeButton = document.getElementById('closeLoginSuccess');
 
-                    setTimeout(function () {
-                        notification.remove();
-                    }, 500);
-                }, 3000);
-            }
+    if (modal && closeButton) {
+        closeButton.addEventListener('click', function () {
+            modal.remove();
         });
-    });
-</script>
-</body>
-</html>
+    }
 
+});
+</script>
 </body>
 </html>

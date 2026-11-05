@@ -141,6 +141,7 @@ Route::middleware(['auth', CheckRole::class . ':admin'])
     });
 
 
+
 // ==========================================
 // 6. DASHBOARD DAN FITUR OWNER
 // ==========================================
@@ -149,11 +150,23 @@ Route::middleware(['auth', CheckRole::class . ':owner'])
     ->name('owner.')
     ->group(function () {
 
-        // Dashboard, Ringkasan, dan Memantau Aktivitas Layanan
+        // Dashboard Owner
         Route::get('/dashboard', [OwnerController::class, 'dashboard'])
             ->name('dashboard');
 
-        // Mengatur Tarif dan Status Layanan
+        // Cetak laporan
+        Route::get('/cetak-laporan', [OwnerController::class, 'cetakLaporanPdf'])
+            ->name('cetak.laporan');
+
+        // Mengatur tarif dan status layanan
         Route::post('/layanan/{idLayanan}', [OwnerController::class, 'updateLayanan'])
             ->name('layanan.update');
+
+        // Menambahkan akun Admin
+        Route::post('/admin', [OwnerController::class, 'storeAdmin'])
+            ->name('admin.store');
+
+        // Menghapus akun Admin
+        Route::delete('/admin/{idAdmin}', [OwnerController::class, 'destroyAdmin'])
+            ->name('admin.destroy');
     });

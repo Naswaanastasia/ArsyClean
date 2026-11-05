@@ -92,8 +92,8 @@
                             type="password"
                             id="password"
                             name="password"
-                            maxlength="8"
-                            maxlength="10"
+                            minlength="8"
+                            maxlength="13"
                             placeholder="Masukkan kata sandi"
                             autocomplete="current-password"
                             class="w-full px-4 py-3 pr-12 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -261,22 +261,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // MENAMPILKAN ERROR DARI LARAVEL
-const validationErrors = @json($errors->all());
+   // MENAMPILKAN ERROR DARI LARAVEL
+const emailErrors = @json($errors->get('email'));
+const passwordErrors = @json($errors->get('password'));
 
-if (validationErrors.length > 0) {
-    const errorMessage = validationErrors[0];
-
-    if (errorMessage.toLowerCase().includes('email')) {
-        showAlert('error', 'Email Tidak Sesuai', errorMessage);
-    } else if (errorMessage.toLowerCase().includes('password')) {
-        showAlert('error', 'Password Tidak Sesuai', errorMessage);
-    } else {
-        showAlert('error', 'Login Gagal', errorMessage);
-    }
+if (passwordErrors.length > 0) {
+    showAlert('error', 'Password Tidak Sesuai', passwordErrors[0]);
+} else if (emailErrors.length > 0) {
+    showAlert('error', 'Email Tidak Sesuai', emailErrors[0]);
+} else if (@json($errors->any())) {
+    showAlert('error', 'Login Gagal', 'Periksa kembali data yang kamu masukkan.');
 }
 
-// PESAN SUKSES DARI SESSION
+// PESAN LOGIN BERHASIL
+@if (session('login_berhasil'))
+    showAlert('success', 'Login Bserhasil!', @json(session('login_berhasil')));
+@endif
+
+// PESAN SUKSES LAINNYA
 @if (session('success'))
     showAlert('success', 'Berhasil!', @json(session('success')));
 @endif

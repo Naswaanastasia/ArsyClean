@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-
-
 use App\Models\Pesanan;
 use App\Models\Pembayaran;
 use App\Models\Stok;
@@ -19,36 +17,37 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
-        // Hanya mengambil pesanan Laundry Reguler
+        // Mengambil semua pesanan selain Laundry Koin
         $pesanans = Pesanan::with([
             'user',
             'layanan',
             'pembayaran'
-            ])
+        ])
             ->whereHas('layanan', function ($query) {
-                $query->where('jenis_layanan', 'Reguler');
-                })
-                ->orderBy('id_pesanan', 'desc')
-                ->get();
-                // Mengambil stok bahan baku, tanpa stok koin
-                $stoks = Stok::where('kategori', '!=', 'Koin')->get();
-                
-                // Mengambil data pembayaran pesanan Reguler saja
-                $pembayarans = Pembayaran::with([
-                    'pesanan.user',
-                    'pesanan.layanan'
-                    ])
-                    ->whereHas('pesanan.layanan', function ($query) {
-                        $query->where('jenis_layanan', 'Reguler');
-                        })
-                        ->orderBy('id_pembayaran', 'desc')
-                        ->get();
-                        
-                        return view('admin.dashboard', compact(
-                            'pesanans',
-                            'stoks',
-                            'pembayarans'
-                            ));
+                $query->where('jenis_layanan', '!=', 'Koin');
+            })
+            ->orderBy('id_pesanan', 'desc')
+            ->get();
+
+        // Mengambil stok bahan baku, tanpa stok koin
+        $stoks = Stok::where('kategori', '!=', 'Koin')->get();
+
+        // Mengambil pembayaran semua pesanan selain Laundry Koin
+        $pembayarans = Pembayaran::with([
+            'pesanan.user',
+            'pesanan.layanan'
+        ])
+            ->whereHas('pesanan.layanan', function ($query) {
+                $query->where('jenis_layanan', '!=', 'Koin');
+            })
+            ->orderBy('id_pembayaran', 'desc')
+            ->get();
+
+        return view('admin.dashboard', compact(
+            'pesanans',
+            'stoks',
+            'pembayarans'
+        ));
     }
 
     /**
@@ -153,14 +152,14 @@ class AdminController extends Controller
         $statusSekarang = $pesanan->status_laundry;
         $statusTujuan = $request->status_laundry;
 
-        // Laundry Reguler tidak menggunakan pengiriman kurir.
+        // Laundry Antar Jemput dapat menggunakan pengiriman kurir
         $isPickup = in_array('antar jemput', $jenisLayanan)
             || in_array('pickup', $jenisLayanan);
 
         if (!$isPickup && $statusTujuan === 'Dalam Pengiriman') {
             return back()->with(
                 'error',
-                'Laundry Reguler tidak menggunakan proses pengiriman kurir.'
+                'Layanan ini tidak menggunakan proses pengiriman kurir.'
             );
         }
 
@@ -218,7 +217,6 @@ class AdminController extends Controller
             );
         }
 
-        // Memastikan nominal pembayaran sesuai total pesanan.
         if (
             round((float) $pembayaran->jumlah_bayar, 2) !==
             round((float) $pembayaran->pesanan->total_harga, 2)
