@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Layanan;
 use App\Models\Pesanan;
 use App\Models\Pembayaran;
 use App\Models\Stok;
@@ -17,34 +18,37 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
-        // Mengambil semua pesanan selain Laundry Koin
-        $pesanans = Pesanan::with([
-            'user',
-            'layanan',
-            'pembayaran'
-        ])
+        // 0. Ambil data layanan yang tersedia
+        $layanans = Layanan::where('status', 'tersedia')->get();
+
+        // 1. Ambil daftar pesanan non-koin
+        $pesanans = Pesanan::with(['layanan', 'pembayaran', 'user'])
             ->whereHas('layanan', function ($query) {
                 $query->where('jenis_layanan', '!=', 'Koin');
             })
-            ->orderBy('id_pesanan', 'desc')
+            ->orderByDesc('id_pesanan')
             ->get();
 
-        // Mengambil stok bahan baku, tanpa stok koin
+        // 2. Ambil 1 pesanan yang belum selesai sebagai activePesanan
+        $activePesanan = $pesanans
+            ->where('status_laundry', '!=', 'Selesai')
+            ->first();
+
+        // 3. Ambil data stok & pembayaran
         $stoks = Stok::where('kategori', '!=', 'Koin')->get();
 
-        // Mengambil pembayaran semua pesanan selain Laundry Koin
-        $pembayarans = Pembayaran::with([
-            'pesanan.user',
-            'pesanan.layanan'
-        ])
+        $pembayarans = Pembayaran::with(['pesanan.user'])
             ->whereHas('pesanan.layanan', function ($query) {
                 $query->where('jenis_layanan', '!=', 'Koin');
             })
-            ->orderBy('id_pembayaran', 'desc')
+            ->orderByDesc('id_pembayaran')
             ->get();
 
+        // 4. Kirim SEMUA variabel termasuk layanans dan activePesanan ke view
         return view('admin.dashboard', compact(
+            'layanans',
             'pesanans',
+            'activePesanan',
             'stoks',
             'pembayarans'
         ));

@@ -55,13 +55,9 @@ Route::middleware('guest')->group(function () {
 // ==========================================
 // 3. LOGOUT (KHUSUS PENGGUNA YANG SUDAH LOGIN)
 // ==========================================
-Route::middleware('auth')->group(function () {
 
-    Route::post('/logout', [RoleAuthController::class, 'logout'])
-        ->name('logout');
-
-    Route::get('/logout', [RoleAuthController::class, 'logout']);
-});
+Route::match(['get', 'post'], '/logout', [RoleAuthController::class, 'logout'])
+    ->name('logout');
 
 
 // ==========================================
