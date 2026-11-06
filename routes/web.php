@@ -78,11 +78,13 @@ Route::middleware(['auth', CheckRole::class . ':pelanggan'])
         Route::post('/pesanan', [PelangganController::class, 'storePesanan'])
             ->name('pesanan.store');
 
+        // BARU: cek status pembayaran otomatis
+        Route::get('/pesanan/{kode}/status', [PelangganController::class, 'statusPesanan'])
+            ->name('pesanan.status');
+
         Route::post('/ulasan/{idPesanan}', [PelangganController::class, 'storeUlasan'])
             ->name('ulasan.store');
     });
-
-
 // ==========================================
 // 5. DASHBOARD DAN FITUR ADMIN
 // ==========================================

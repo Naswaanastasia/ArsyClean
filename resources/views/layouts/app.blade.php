@@ -81,12 +81,6 @@
 </div>
 @endif
 
-@if(session('success'))
-    <div class="max-w-7xl mx-auto px-4 mt-4 w-full">
-        {{ session('success') }}
-    </div>
-@endif
-
 @if(session('error'))
     <div class="max-w-7xl mx-auto px-4 mt-4 w-full">
         {{ session('error') }}
