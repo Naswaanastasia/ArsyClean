@@ -44,7 +44,7 @@ class AdminController extends Controller
             ->orderByDesc('id_pembayaran')
             ->get();
 
-        // 4. Kirim SEMUA variabel termasuk layanans dan activePesanan ke view
+        // 4. Kirim SEMUA variabel termasuk layanans dan activePesanan ke view admin.dashboard
         return view('admin.dashboard', compact(
             'layanans',
             'pesanans',
@@ -132,8 +132,7 @@ class AdminController extends Controller
         }
 
         $jenisLayanan = $pesanan->layanan
-            ->pluck('jenis_layanan')
-            ->map(fn($jenis) => strtolower($jenis))
+            ->map(fn($item) => strtolower($item->jenis_layanan ?? ''))
             ->toArray();
 
         if (in_array('koin', $jenisLayanan)) {
@@ -240,7 +239,7 @@ class AdminController extends Controller
                 $pembayaran->pesanan->status_pesanan === 'Menunggu Pembayaran'
             ) {
                 $pembayaran->pesanan->status_pesanan = 'Menunggu Verifikasi';
-                $pembayaran->pesanan->save();
+                $pembayaran->save();
             }
         });
 

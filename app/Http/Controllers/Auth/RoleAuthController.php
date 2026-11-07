@@ -175,7 +175,7 @@ class RoleAuthController extends Controller
     // PENGALIHAN DASHBOARD BERDASARKAN ROLE
     private function redirectBasedOnRole(string $role)
     {
-        return match ($role) {
+        return match (strtolower(trim($role))) {
             'pelanggan' => redirect()->route('pelanggan.dashboard'),
             'admin' => redirect()->route('admin.dashboard'),
             'owner' => redirect()->route('owner.dashboard'),
