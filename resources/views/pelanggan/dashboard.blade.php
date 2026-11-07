@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('title', 'Dashboard Pelanggan - Laravel ArsyClean')
@@ -47,8 +46,8 @@
                     </p>
                 </div>
 
-                <p class="mb-5 text-xs text-slate-500">
-                    Tunggu konfirmasi pembayaran otomatis dari Midtrans.
+                <p id="qrSessionStatus" class="mb-5 text-xs text-slate-500">
+                    Menunggu pembayaran... status akan diperbarui otomatis.
                 </p>
             @else
                 <h3 class="mb-2 text-xl font-bold text-slate-800">
@@ -61,7 +60,7 @@
             @endif
 
             <button type="button"
-                    onclick="document.getElementById('notificationModal').remove()"
+                    onclick="hentikanCekPembayaran(); document.getElementById('notificationModal').remove()"
                     class="w-full rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white hover:bg-sky-600">
                 Tutup
             </button>
@@ -202,8 +201,9 @@
                         <th class="p-3">Layanan</th>
                         <th class="p-3">Jumlah</th>
                         <th class="p-3">Total</th>
-                        <th class="p-3">Status Laundry</th>
+                        <th class="p-3">Status</th>
                         <th class="p-3">Pembayaran</th>
+                        <th class="p-3">Aksi</th>
                     </tr>
                 </thead>
 
@@ -238,24 +238,79 @@
                             </td>
 
                             <td class="p-3">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
-                                    {{ $p->status_laundry }}
+                                @php
+                                    $statusPesanan = $p->status_pesanan;
+                                    $warnaStatus = match ($statusPesanan) {
+                                        'Selesai'    => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                        'Dibatalkan' => 'bg-red-50 text-red-700 border-red-200',
+                                        'Diproses'   => 'bg-sky-50 text-sky-700 border-sky-200',
+                                        default      => 'bg-amber-50 text-amber-700 border-amber-200',
+                                    };
+                                @endphp
+
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $warnaStatus }}">
+                                    {{ $statusPesanan === 'Diproses' ? $p->status_laundry : $statusPesanan }}
+                                </span>
+
+                                @if($p->pengiriman)
+                                    <div class="mt-1 text-[10px] text-slate-500">
+                                        Kurir: {{ $p->pengiriman->nama_kurir }}
+                                        ({{ $p->pengiriman->status_pengiriman }})
+                                    </div>
+                                @endif
+                            </td>
+
+                            <td class="p-3">
+                                @php
+                                    $statusBayar = $p->pembayaran?->status_pembayaran ?? 'Pending';
+                                    $warnaBayar = match ($statusBayar) {
+                                        'Lunas'                => 'bg-emerald-100 text-emerald-800',
+                                        'Gagal', 'Dibatalkan'  => 'bg-red-100 text-red-800',
+                                        default                => 'bg-amber-100 text-amber-800',
+                                    };
+                                @endphp
+
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $warnaBayar }}">
+                                    {{ $statusBayar }} ({{ $p->metode_pembayaran }})
                                 </span>
                             </td>
 
                             <td class="p-3">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold
-                                    {{ ($p->pembayaran->status_pembayaran ?? '') === 'Lunas'
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : 'bg-amber-100 text-amber-800' }}">
-                                    {{ $p->pembayaran->status_pembayaran ?? 'Pending' }}
-                                    ({{ $p->metode_pembayaran }})
-                                </span>
+                                @php
+                                    $bisaBayar = $p->status_pesanan === 'Menunggu Pembayaran'
+                                        && $statusBayar === 'Pending'
+                                        && !empty($p->pembayaran?->qr_code_url);
+                                @endphp
+
+                                @if($bisaBayar)
+                                    <button type="button"
+                                            data-kode="{{ $p->kode_pesanan }}"
+                                            data-qr="{{ $p->pembayaran->qr_code_url }}"
+                                            data-total="{{ (int) round($p->total_harga) }}"
+                                            onclick="openQrModal(this)"
+                                            class="px-3 py-1.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-lg text-[11px]">
+                                        Bayar
+                                    </button>
+                                @elseif($p->ulasan)
+                                    <span class="text-amber-500 font-bold">
+                                        {{ str_repeat('★', (int) $p->ulasan->rating) }}{{ str_repeat('☆', 5 - (int) $p->ulasan->rating) }}
+                                    </span>
+                                @elseif($p->status_pesanan === 'Selesai')
+                                    <button type="button"
+                                            data-id="{{ $p->id_pesanan }}"
+                                            data-kode="{{ $p->kode_pesanan }}"
+                                            onclick="openReviewModal(this)"
+                                            class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-[11px]">
+                                        Beri Ulasan
+                                    </button>
+                                @else
+                                    <span class="text-slate-300">-</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="p-4 text-center text-slate-400">
+                            <td colspan="8" class="p-4 text-center text-slate-400">
                                 Belum ada riwayat pesanan.
                             </td>
                         </tr>
@@ -565,6 +620,82 @@
         </form>
     </div>
 </div>
+<!-- Modal QR Pembayaran (untuk melanjutkan pembayaran yang tertunda) -->
+<div id="qrModal"
+     class="hidden fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-3xl max-w-sm w-full p-7 text-center shadow-2xl max-h-[90vh] overflow-y-auto">
+        <h3 class="mb-1 text-xl font-bold text-slate-800">Bayar Pesanan</h3>
+        <p class="mb-4 text-sm text-slate-500">Scan QRIS berikut untuk membayar.</p>
+
+        <div class="rounded-xl border border-slate-200 p-3 mb-4">
+            <img id="qrModalImage" src="" alt="QRIS Pembayaran" class="mx-auto w-full max-w-[240px]">
+
+            <p class="mt-3 text-sm font-bold text-slate-800">Kode Pesanan</p>
+            <p id="qrModalKode" class="text-sm text-sky-600 font-mono"></p>
+
+            <p class="mt-3 text-sm text-slate-500">Total Pembayaran</p>
+            <p id="qrModalTotal" class="text-xl font-black text-slate-800"></p>
+        </div>
+
+        <p id="qrModalStatus" class="mb-5 text-xs text-slate-500">
+            Menunggu pembayaran... status akan diperbarui otomatis.
+        </p>
+
+        <button type="button"
+                onclick="closeQrModal()"
+                class="w-full rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white hover:bg-sky-600">
+            Tutup
+        </button>
+    </div>
+</div>
+
+<!-- Modal Ulasan -->
+<div id="reviewModal"
+     class="hidden fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-3xl max-w-sm w-full p-7 shadow-2xl">
+        <h3 class="text-xl font-bold text-slate-800 text-center mb-1">Beri Ulasan</h3>
+        <p id="reviewKode" class="text-center text-xs text-slate-500 mb-4 font-mono"></p>
+
+        <form id="reviewForm" method="POST" action="" class="space-y-4 text-sm">
+            @csrf
+            <input type="hidden" name="rating" id="reviewRating" value="">
+
+            <div id="reviewStars" class="flex justify-center gap-1">
+                @for($i = 1; $i <= 5; $i++)
+                    <button type="button"
+                            data-star="{{ $i }}"
+                            onclick="setRating({{ $i }})"
+                            class="text-4xl text-slate-300 transition">★</button>
+                @endfor
+            </div>
+
+            <p id="reviewError" class="hidden text-center text-xs text-red-600">
+                Pilih rating bintang 1 sampai 5.
+            </p>
+
+            <textarea name="komentar"
+                      rows="3"
+                      placeholder="Ceritakan pengalamanmu (opsional)"
+                      class="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-sky-400 outline-none"></textarea>
+
+            <div class="flex gap-3">
+                <button type="button"
+                        onclick="closeReviewModal()"
+                        class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">
+                    Batal
+                </button>
+
+                <button type="submit"
+                        class="flex-1 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl">
+                    Kirim
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal Peringatan Validasi -->
 <div id="alertModal"
      class="hidden fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -788,6 +919,137 @@ function closeAlert() {
             }
         }
     });
+</script>
+
+<script>
+    // ===== Cek status pembayaran otomatis =====
+    // Pengecekan berikutnya baru dimulai SETELAH pengecekan sebelumnya
+    // selesai, jadi permintaan tidak menumpuk kalau server sedang lambat.
+    let pembayaranTimer = null;
+    let pembayaranToken = 0;
+
+    function mulaiCekPembayaran(kode, statusElId) {
+        hentikanCekPembayaran();
+
+        const token = ++pembayaranToken;
+        const urlStatus = @json(url('/pelanggan/pesanan')) + '/' + encodeURIComponent(kode) + '/status';
+
+        async function cek() {
+            if (token !== pembayaranToken) return;
+
+            try {
+                const ctrl = new AbortController();
+                const batas = setTimeout(function () { ctrl.abort(); }, 20000);
+
+                const res = await fetch(urlStatus, {
+                    headers: { 'Accept': 'application/json' },
+                    signal: ctrl.signal
+                });
+                clearTimeout(batas);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (token !== pembayaranToken) return;
+
+                    if (data.status_pembayaran !== 'Pending') {
+                        hentikanCekPembayaran();
+
+                        const el = document.getElementById(statusElId);
+                        if (el) {
+                            const sukses = data.status_pembayaran === 'Lunas';
+                            el.textContent = sukses
+                                ? 'Pembayaran berhasil! Memuat ulang halaman...'
+                                : 'Pembayaran ' + data.status_pembayaran.toLowerCase() + '. Memuat ulang halaman...';
+                            el.className = 'mb-5 text-sm font-bold ' + (sukses ? 'text-emerald-600' : 'text-red-600');
+                        }
+
+                        setTimeout(function () {
+                            window.location.href = @json(route('pelanggan.dashboard'));
+                        }, 1500);
+                        return;
+                    }
+                }
+            } catch (e) {
+                // Abaikan, coba lagi nanti.
+            }
+
+            if (token === pembayaranToken) {
+                pembayaranTimer = setTimeout(cek, 5000);
+            }
+        }
+
+        pembayaranTimer = setTimeout(cek, 3000);
+    }
+
+    function hentikanCekPembayaran() {
+        pembayaranToken++;
+        if (pembayaranTimer) {
+            clearTimeout(pembayaranTimer);
+            pembayaranTimer = null;
+        }
+    }
+
+    // ===== Modal QR (tombol "Bayar" di riwayat) =====
+    function openQrModal(btn) {
+        document.getElementById('qrModalImage').src = btn.dataset.qr;
+        document.getElementById('qrModalKode').textContent = btn.dataset.kode;
+        document.getElementById('qrModalTotal').textContent =
+            'Rp' + Number(btn.dataset.total).toLocaleString('id-ID');
+
+        const status = document.getElementById('qrModalStatus');
+        status.textContent = 'Menunggu pembayaran... status akan diperbarui otomatis.';
+        status.className = 'mb-5 text-xs text-slate-500';
+
+        document.getElementById('qrModal').classList.remove('hidden');
+        mulaiCekPembayaran(btn.dataset.kode, 'qrModalStatus');
+    }
+
+    function closeQrModal() {
+        document.getElementById('qrModal').classList.add('hidden');
+        hentikanCekPembayaran();
+    }
+
+    // ===== Modal Ulasan =====
+    function openReviewModal(btn) {
+        const form = document.getElementById('reviewForm');
+
+        form.reset();
+        form.action = @json(route('pelanggan.ulasan.store', ['idPesanan' => '__ID__'])).replace('__ID__', btn.dataset.id);
+
+        document.getElementById('reviewKode').textContent = btn.dataset.kode;
+        setRating(0);
+        document.getElementById('reviewModal').classList.remove('hidden');
+    }
+
+    function closeReviewModal() {
+        document.getElementById('reviewModal').classList.add('hidden');
+    }
+
+    function setRating(n) {
+        document.getElementById('reviewRating').value = n > 0 ? n : '';
+
+        document.querySelectorAll('#reviewStars button').forEach(function (b) {
+            const aktif = Number(b.dataset.star) <= n;
+            b.classList.toggle('text-amber-400', aktif);
+            b.classList.toggle('text-slate-300', !aktif);
+        });
+
+        if (n > 0) {
+            document.getElementById('reviewError').classList.add('hidden');
+        }
+    }
+
+    document.getElementById('reviewForm').addEventListener('submit', function (e) {
+        if (!document.getElementById('reviewRating').value) {
+            e.preventDefault();
+            document.getElementById('reviewError').classList.remove('hidden');
+        }
+    });
+
+    // ===== Popup QR setelah pesanan baru dibuat: ikut dicek otomatis =====
+    @if(session('qr_code_url'))
+        mulaiCekPembayaran(@json(session('kode_pesanan')), 'qrSessionStatus');
+    @endif
 </script>
 
 @endsection
