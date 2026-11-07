@@ -9,10 +9,12 @@ use App\Models\Ulasan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Midtrans\Config;
 use Midtrans\CoreApi;
+use Midtrans\Transaction;
 
 class PelangganController extends Controller
 {
@@ -32,7 +34,7 @@ class PelangganController extends Controller
             ])
             ->get();
 
-        $pesanans = Pesanan::with([
+        $ambilPesanan = fn () => Pesanan::with([
             'layanan',
             'pembayaran',
             'pengiriman',
@@ -42,7 +44,32 @@ class PelangganController extends Controller
             ->orderByDesc('id_pesanan')
             ->get();
 
+        $pesanans = $ambilPesanan();
+
+        // CADANGAN WEBHOOK: pesanan yang masih menunggu pembayaran
+        // ditanyakan langsung ke Midtrans (maksimal 2 pesanan terbaru
+        // supaya halaman tetap cepat).
+        $perluDicek = $pesanans
+            ->filter(fn ($p) => $p->status_pesanan === 'Menunggu Pembayaran'
+                && $p->pembayaran
+                && $p->pembayaran->status_pembayaran === 'Pending'
+                && $p->pembayaran->midtrans_order_id)
+            ->take(2);
+
+        if ($perluDicek->isNotEmpty()) {
+            foreach ($perluDicek as $p) {
+                $this->sinkronkanDenganMidtrans($p->pembayaran);
+            }
+
+            // Ambil ulang supaya status terbaru ikut tampil.
+            $pesanans = $ambilPesanan();
+        }
+
+        // Hanya pesanan yang sudah dibayar dan sedang dikerjakan.
+        // Pesanan batal / belum dibayar tidak boleh tampil sebagai
+        // "Cucian Sedang Berlangsung".
         $activePesanan = $pesanans
+            ->where('status_pesanan', 'Diproses')
             ->where('status_laundry', '!=', 'Selesai')
             ->first();
 
@@ -431,6 +458,123 @@ class PelangganController extends Controller
                     'error',
                     'QRIS gagal dibuat. Silakan coba kembali.'
                 );
+        }
+    }
+
+    /**
+     * Cek status pembayaran (dipanggil otomatis oleh halaman pelanggan
+     * saat QR terbuka, supaya halaman ikut berubah setelah dibayar).
+     *
+     * Kalau pembayaran masih Pending, ditanyakan langsung ke Midtrans.
+     * Ini cadangan kalau kabar (webhook) dari Midtrans belum sampai,
+     * misalnya saat aplikasi masih berjalan di localhost.
+     */
+    public function statusPesanan($kode)
+    {
+        $pesanan = Pesanan::with('pembayaran')
+            ->where('kode_pesanan', $kode)
+            ->where('id_user', Auth::user()->id_user)
+            ->firstOrFail();
+
+        $pembayaran = $pesanan->pembayaran;
+
+        if (
+            $pembayaran
+            && $pembayaran->status_pembayaran === 'Pending'
+            && $pembayaran->midtrans_order_id
+        ) {
+            $this->sinkronkanDenganMidtrans($pembayaran);
+            $pesanan = $pesanan->fresh('pembayaran');
+        }
+
+        return response()->json([
+            'status_pesanan'    => $pesanan->status_pesanan,
+            'status_pembayaran' => $pesanan->pembayaran->status_pembayaran ?? 'Pending',
+        ]);
+    }
+
+    /**
+     * Menanyakan status transaksi ke Midtrans, lalu memperbarui database.
+     * Aturannya sama dengan MidtransWebhookController.
+     */
+    private function sinkronkanDenganMidtrans(Pembayaran $pembayaran): void
+    {
+        try {
+            Config::$serverKey    = config('services.midtrans.server_key');
+            Config::$isProduction = (bool) config('services.midtrans.is_production');
+
+            // Batas waktu: kalau Midtrans lambat, jangan sampai halaman
+            // menggantung (loading terus).
+            Config::$curlOptions = [
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT        => 8,
+                CURLOPT_HTTPHEADER     => [],
+            ];
+
+            $data = json_decode(
+                json_encode(Transaction::status($pembayaran->midtrans_order_id)),
+                true
+            );
+
+            if (!is_array($data)) {
+                return;
+            }
+
+            DB::transaction(function () use ($pembayaran, $data) {
+
+                $bayar = Pembayaran::where('id_pembayaran', $pembayaran->id_pembayaran)
+                    ->lockForUpdate()
+                    ->first();
+
+                // Sudah diproses (mis. oleh webhook): jangan diubah lagi.
+                if (!$bayar || $bayar->status_pembayaran !== 'Pending') {
+                    return;
+                }
+
+                // Nominal dari Midtrans harus sama dengan tagihan.
+                if (
+                    (int) round((float) ($data['gross_amount'] ?? 0)) !==
+                    (int) round((float) $bayar->jumlah_bayar)
+                ) {
+                    return;
+                }
+
+                $status = $data['transaction_status'] ?? '';
+                $fraud  = $data['fraud_status'] ?? '';
+
+                if (
+                    $status === 'settlement' ||
+                    ($status === 'capture' && $fraud === 'accept')
+                ) {
+                    $bayar->status_pembayaran = 'Lunas';
+                    $bayar->tanggal_bayar = now();
+                    $bayar->pesanan()->update(['status_pesanan' => 'Diproses']);
+
+                } elseif (in_array($status, ['deny', 'cancel', 'expire', 'failure'])) {
+
+                    $bayar->status_pembayaran = $status === 'cancel' ? 'Dibatalkan' : 'Gagal';
+                    $bayar->pesanan()->update(['status_pesanan' => 'Dibatalkan']);
+
+                } else {
+                    // Masih pending: belum ada yang perlu diubah.
+                    return;
+                }
+
+                $bayar->midtrans_transaction_id =
+                    $data['transaction_id'] ?? $bayar->midtrans_transaction_id;
+                $bayar->midtrans_transaction_status = $status;
+                $bayar->midtrans_response = $data;
+                $bayar->save();
+            });
+
+        } catch (\Throwable $e) {
+            // 404 = transaksi belum dikenal Midtrans, wajar, abaikan.
+            if ((int) $e->getCode() !== 404) {
+                Log::warning('Gagal cek status ke Midtrans.', [
+                    'order_id' => $pembayaran->midtrans_order_id,
+                    'error'    => $e->getMessage(),
+                ]);
+            }
         }
     }
 
