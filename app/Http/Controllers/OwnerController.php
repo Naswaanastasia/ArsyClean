@@ -8,6 +8,7 @@ use App\Models\Layanan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\QueryException;
 
 class OwnerController extends Controller
 {
@@ -16,7 +17,6 @@ class OwnerController extends Controller
      */
     public function dashboard(Request $request)
     {
-        // 1. Query Dasar Pembayaran Lunas dengan Filter Tanggal
         $queryPembayaran = Pembayaran::where('status_pembayaran', 'Lunas');
 
         if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
@@ -26,16 +26,13 @@ class OwnerController extends Controller
             ]);
         }
 
-        // Total omzet berdasarkan filter / keseluruhan
         $totalOmzet = (float) $queryPembayaran->sum('jumlah_bayar');
 
-        // 2. Statistik Volume Usaha
         $totalPesanan = Pesanan::count();
         $totalTransaksi = Pesanan::where('status_pesanan', 'Selesai')->count();
         $totalPelanggan = User::where('role', 'pelanggan')->count();
         $totalAdmin = User::where('role', 'admin')->count();
 
-        // 3. Memantau Aktivitas Layanan: Pickup, Reguler, dan Koin
         $jumlahPickup = Pesanan::whereHas('layanan', function ($query) {
             $query->where('jenis_layanan', 'Antar Jemput');
         })->count();
@@ -48,12 +45,10 @@ class OwnerController extends Controller
             $query->where('jenis_layanan', 'Koin');
         })->count();
 
-        // 4. Statistik status pesanan
         $pesananSelesai = Pesanan::where('status_pesanan', 'Selesai')->count();
         $pesananDiproses = Pesanan::where('status_pesanan', 'Diproses')->count();
         $pesananDibatalkan = Pesanan::where('status_pesanan', 'Dibatalkan')->count();
 
-        // 5. Riwayat Pembayaran & Layanan
         $pembayarans = Pembayaran::with(['pesanan.user', 'pesanan.layanan'])
             ->orderBy('id_pembayaran', 'desc')
             ->get();
@@ -78,34 +73,40 @@ class OwnerController extends Controller
     }
 
     /**
-     * Halaman Khusus: Laporan Keuangan & Transaksi
+     * Laporan Keuangan & Transaksi
      */
     public function laporan(Request $request)
     {
         $query = Pembayaran::with(['pesanan.user', 'pesanan.layanan']);
+
         if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
             $query->whereBetween('created_at', [
                 $request->tanggal_mulai . ' 00:00:00',
                 $request->tanggal_selesai . ' 23:59:59'
             ]);
         }
+
         $pembayarans = $query->orderByDesc('id_pembayaran')->get();
-        $totalOmzet = (float) $pembayarans->where('status_pembayaran', 'Lunas')->sum('jumlah_bayar');
+
+        $totalOmzet = (float) $pembayarans
+            ->where('status_pembayaran', 'Lunas')
+            ->sum('jumlah_bayar');
+
         return view('owner.laporan', compact('pembayarans', 'totalOmzet'));
     }
 
     /**
-     * Halaman Khusus: Tarif & Monitoring Layanan
+     * Halaman Pengelolaan Layanan
      */
     public function layanan()
     {
         $layanans = Layanan::orderBy('id_layanan')->get();
+
         return view('owner.layanan', compact('layanans'));
     }
 
-
     /**
-     * Halaman Khusus Pengelolaan Akun Admin (Dipisahkan dari Dashboard)
+     * Daftar Akun Admin
      */
     public function adminIndex()
     {
@@ -117,41 +118,42 @@ class OwnerController extends Controller
     }
 
     /**
-     * Menambah Akun Admin Baru (Langkah 6: Mengelola Admin)
+     * Menambahkan Akun Admin
      */
     public function storeAdmin(Request $request)
     {
         $request->validate([
-            'nama'     => 'required|string|max:100',
-            'email'    => 'required|string|email|max:100|unique:users,email',
-            'no_hp'    => 'required|numeric|digits_between:10,15',
-            'alamat'   => 'required|string|max:255',
+            'nama' => 'required|string|max:100',
+            'email' => 'required|string|email|max:100|unique:users,email',
+            'no_hp' => 'required|numeric|digits_between:10,15',
+            'alamat' => 'required|string|max:255',
             'password' => 'required|string|min:6',
         ], [
-            'nama.required'     => 'Nama admin wajib diisi.',
-            'email.required'    => 'Alamat email admin wajib diisi.',
-            'email.email'       => 'Format email tidak valid.',
-            'email.unique'      => 'Alamat email sudah terdaftar.',
-            'no_hp.required'    => 'Nomor WhatsApp / HP admin wajib diisi.',
-            'no_hp.numeric'     => 'Nomor WhatsApp harus berupa angka numerik.',
+            'nama.required' => 'Nama admin wajib diisi.',
+            'email.required' => 'Alamat email admin wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Alamat email sudah terdaftar.',
+            'no_hp.required' => 'Nomor WhatsApp / HP admin wajib diisi.',
+            'no_hp.numeric' => 'Nomor WhatsApp harus berupa angka.',
             'no_hp.digits_between' => 'Nomor WhatsApp harus antara 10 hingga 15 digit.',
-            'alamat.required'   => 'Alamat domisili admin wajib diisi.',
+            'alamat.required' => 'Alamat domisili admin wajib diisi.',
             'password.required' => 'Password admin wajib diisi.',
-            'password.min'      => 'Password minimal harus 6 karakter.',
+            'password.min' => 'Password minimal harus 6 karakter.',
         ]);
 
         $nextId = (int) (User::max('id_user') ?? 0) + 1;
+
         $kodeUser = 'ADM' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
 
         User::create([
             'kode_user' => $kodeUser,
-            'nama'      => $request->nama,
-            'email'     => $request->email,
-            'no_hp'     => $request->no_hp,
-            'alamat'    => $request->alamat,
-            'password'  => Hash::make($request->password),
-            'role'      => 'admin',
-            'status'    => 'aktif',
+            'nama' => $request->nama,
+            'email' => $request->email,
+            'no_hp' => $request->no_hp,
+            'alamat' => $request->alamat,
+            'password' => Hash::make($request->password),
+            'role' => 'admin',
+            'status' => 'aktif',
         ]);
 
         return redirect()->route('owner.admin.index')
@@ -159,45 +161,107 @@ class OwnerController extends Controller
     }
 
     /**
-     * Menghapus Akun Admin
+     * MENGHAPUS AKUN ADMIN
      */
     public function destroyAdmin($idAdmin)
     {
-        $admin = User::where('role', 'admin')->findOrFail($idAdmin);
-        $namaAdmin = $admin->nama;
-        $admin->delete();
+        try {
+            $admin = User::where('id_user', $idAdmin)
+                ->where('role', 'admin')
+                ->first();
 
-        return redirect()->route('owner.admin.index')
-            ->with('success', "Akun Admin ({$namaAdmin}) berhasil dihapus.");
+            if (!$admin) {
+                return redirect()->route('owner.admin.index')
+                    ->with('error', 'Akun admin tidak ditemukan atau sudah dihapus.');
+            }
+
+            if (auth()->id() == $admin->id_user) {
+                return redirect()->route('owner.admin.index')
+                    ->with('error', 'Anda tidak dapat menghapus akun yang sedang digunakan.');
+            }
+
+            $namaAdmin = $admin->nama;
+            $admin->delete();
+
+            return redirect()->route('owner.admin.index')
+                ->with('success', "Akun Admin {$namaAdmin} berhasil dihapus.");
+
+        } catch (QueryException $e) {
+            return redirect()->route('owner.admin.index')
+                ->with('error', 'Akun admin tidak dapat dihapus karena masih memiliki data yang terhubung di database.');
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()->route('owner.admin.index')
+                ->with('error', 'Terjadi kesalahan saat menghapus akun admin. Silakan periksa log Laravel.');
+        }
     }
 
     /**
-     * Mengatur Tarif & Status Layanan
+     * Mengatur Tarif & Status Layanan (Update Quick)
      */
     public function updateLayanan(Request $request, $idLayanan)
     {
         $request->validate([
             'harga'  => 'required|numeric|min:0',
             'status' => 'required|in:tersedia,tidak_tersedia',
-        ], [
-            'harga.required'  => 'Tarif layanan wajib diisi.',
-            'harga.numeric'   => 'Tarif layanan harus berupa angka.',
-            'harga.min'       => 'Tarif layanan minimal Rp 0.',
-            'status.required' => 'Status operasional layanan wajib dipilih.',
-            'status.in'       => 'Pilihan status layanan tidak valid.',
         ]);
 
         $layanan = Layanan::findOrFail($idLayanan);
-        $layanan->harga = $request->harga;
-        $layanan->status = $request->status;
-        $layanan->save();
+        $layanan->update([
+            'harga'  => $request->harga,
+            'status' => $request->status,
+        ]);
 
-        return redirect()->route('owner.dashboard')
-            ->with('success', "Tarif & status layanan {$layanan->nama_layanan} berhasil diperbarui.");
+        return redirect()->back()->with('success', "Data tarif & status layanan {$layanan->nama_layanan} berhasil diperbarui.");
     }
 
     /**
-     * Cetak Laporan PDF Laporan Omzet & Keuangan
+     * Menambahkan Layanan Baru
+     */
+    public function storeLayanan(Request $request)
+    {
+        $request->validate([
+            'nama_layanan'  => 'required|string|max:255',
+            'harga'         => 'required|numeric|min:0',
+            'satuan'        => 'required|string|max:50',
+            'jenis_layanan' => 'required|string|max:50',
+            'status'        => 'required|in:tersedia,tidak_tersedia',
+        ]);
+
+        $nextId = (int) (Layanan::max('id_layanan') ?? 0) + 1;
+        $kodeLayanan = 'L' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+
+        Layanan::create([
+            'kode_layanan'  => $kodeLayanan,
+            'nama_layanan'  => $request->nama_layanan,
+            'harga'         => $request->harga,
+            'satuan'        => $request->satuan,
+            'jenis_layanan' => $request->jenis_layanan,
+            'status'        => $request->status,
+        ]);
+
+        return redirect()->back()->with('success', 'Layanan baru berhasil ditambahkan.');
+    }
+
+    /**
+     * Menghapus Layanan
+     */
+    public function destroyLayanan($idLayanan)
+    {
+        try {
+            $layanan = Layanan::findOrFail($idLayanan);
+            $namaLayanan = $layanan->nama_layanan;
+            $layanan->delete();
+
+            return redirect()->back()->with('success', "Layanan {$namaLayanan} berhasil dihapus.");
+        } catch (QueryException $e) {
+            return redirect()->back()->with('error', 'Layanan tidak dapat dihapus karena sudah memiliki riwayat transaksi.');
+        }
+    }
+
+    /**
+     * Cetak Laporan PDF
      */
     public function cetakLaporanPdf(Request $request)
     {
@@ -211,9 +275,15 @@ class OwnerController extends Controller
             ]);
         }
 
-        $pembayarans = $queryPembayaran->orderBy('id_pembayaran', 'desc')->get();
+        $pembayarans = $queryPembayaran
+            ->orderBy('id_pembayaran', 'desc')
+            ->get();
+
         $totalOmzet = (float) $pembayarans->sum('jumlah_bayar');
 
-        return view('owner.cetak_laporan', compact('pembayarans', 'totalOmzet'));
+        return view('owner.cetak_laporan', compact(
+            'pembayarans',
+            'totalOmzet'
+        ));
     }
 }

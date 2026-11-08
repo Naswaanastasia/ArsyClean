@@ -61,7 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::match(['get', 'post'], '/logout', [RoleAuthController::class, 'logout'])
         ->name('logout');
 
-    // Lihat & Edit Profil Pengguna (Bisa diklik dari navbar/sidebar)
+    // Lihat & Edit Profil Pengguna
     Route::get('/profile', [RoleAuthController::class, 'showProfile'])
         ->name('profile');
 
@@ -79,39 +79,30 @@ Route::middleware(['auth', CheckRole::class . ':pelanggan'])
         Route::get('/dashboard', [PelangganController::class, 'dashboard'])
             ->name('dashboard');
 
-        // Katalog Layanan (Halaman Khusus)
         Route::get('/layanan', [PelangganController::class, 'layanan'])
             ->name('layanan');
 
-        // Riwayat Pesanan (Halaman Khusus)
         Route::get('/riwayat', [PelangganController::class, 'riwayat'])
             ->name('riwayat');
 
-        // Pemesanan Laundry
         Route::post('/pesanan', [PelangganController::class, 'storePesanan'])
             ->name('pesanan.store');
 
-        // Cek status pesanan realtime berdasarkan kode pesanan
         Route::get('/pesanan/{kode}/status', [PelangganController::class, 'statusPesanan'])
             ->name('pesanan.status');
 
-        // Modal detail pesanan interaktif & aksi
         Route::get('/pesanan/{id}/detail', [PelangganController::class, 'detailPesanan'])
             ->name('pesanan.detail');
 
-        // Cetak struk/nota pesanan PDF kapan saja
         Route::get('/pesanan/{id}/nota', [PelangganController::class, 'cetakNotaPdf'])
             ->name('pesanan.nota');
 
-        // Upload bukti pembayaran transfer manual / QR manual
         Route::post('/pesanan/{id}/upload-bukti', [PelangganController::class, 'uploadBuktiPembayaran'])
             ->name('pembayaran.upload');
 
-        // SVG QRIS Manual ArsyClean jika Midtrans belum acc
         Route::get('/qris-manual/{kode}', [PelangganController::class, 'generateQrisManual'])
             ->name('qris.manual');
 
-        // Kirim Ulasan Layanan
         Route::post('/ulasan/{idPesanan}', [PelangganController::class, 'storeUlasan'])
             ->name('ulasan.store');
     });
@@ -126,7 +117,6 @@ Route::middleware(['auth', CheckRole::class . ':admin'])
         Route::get('/dashboard', [AdminController::class, 'dashboard'])
             ->name('dashboard');
 
-        // Halaman Khusus Menu Sidebar Admin:
         Route::get('/pesanan-masuk', [AdminController::class, 'pesananMasuk'])
             ->name('pesanan_masuk');
 
@@ -142,7 +132,6 @@ Route::middleware(['auth', CheckRole::class . ':admin'])
         Route::get('/stok', [AdminController::class, 'stok'])
             ->name('stok');
 
-        // Pengelolaan Pesanan Aksi
         Route::post('/pesanan/{idPesanan}/terima', [AdminController::class, 'konfirmasiPesanan'])
             ->name('pesanan.konfirmasi');
 
@@ -152,15 +141,12 @@ Route::middleware(['auth', CheckRole::class . ':admin'])
         Route::post('/pesanan/{idPesanan}/status', [AdminController::class, 'updateStatusLaundry'])
             ->name('pesanan.status');
 
-        // Verifikasi Pembayaran Pelanggan
         Route::post('/pembayaran/{idPembayaran}/verifikasi', [AdminController::class, 'verifikasiPembayaran'])
             ->name('pembayaran.verifikasi');
 
-        // Manajemen Stok Bahan Baku
         Route::post('/stok/{idStok}', [AdminController::class, 'updateStok'])
             ->name('stok.update');
 
-        // Pengiriman Kurir
         Route::post('/pengiriman', [AdminController::class, 'simpanPengiriman'])
             ->name('pengiriman.store');
 
@@ -178,11 +164,9 @@ Route::middleware(['auth', CheckRole::class . ':owner'])
         Route::get('/dashboard', [OwnerController::class, 'dashboard'])
             ->name('dashboard');
 
-        // Halaman Khusus Laporan Keuangan
         Route::get('/laporan', [OwnerController::class, 'laporan'])
             ->name('laporan');
 
-        // Halaman Khusus Pengelolaan Admin (Dipisahkan dari Dashboard)
         Route::get('/admin', [OwnerController::class, 'adminIndex'])
             ->name('admin.index');
 
@@ -196,10 +180,16 @@ Route::middleware(['auth', CheckRole::class . ':owner'])
         Route::get('/layanan', [OwnerController::class, 'layanan'])
             ->name('layanan');
 
+        // CRUD Layanan Owner
+        Route::post('/layanan', [OwnerController::class, 'storeLayanan'])
+            ->name('layanan.store');
+
         Route::post('/layanan/{idLayanan}', [OwnerController::class, 'updateLayanan'])
             ->name('layanan.update');
 
-        // Cetak Laporan Omzet & Keuangan PDF
+        Route::delete('/layanan/{idLayanan}', [OwnerController::class, 'destroyLayanan'])
+            ->name('layanan.destroy');
+
         Route::get('/cetak-laporan', [OwnerController::class, 'cetakLaporanPdf'])
             ->name('cetak.laporan');
     });

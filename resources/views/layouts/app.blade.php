@@ -95,7 +95,7 @@
                             </div>
                         </a>
 
-                        <!-- 2. Pesanan Masuk (Khusus Konfirmasi) -->
+                        <!-- 2. Pesanan Masuk -->
                         <a href="{{ route('admin.pesanan_masuk') }}"
                            class="nav-item flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold text-slate-200 {{ request()->routeIs('admin.pesanan_masuk') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
@@ -109,7 +109,7 @@
                             @endif
                         </a>
 
-                        <!-- 3. Pengerjaan Laundry Bertahap -->
+                        <!-- 3. Pengerjaan Laundry -->
                         <a href="{{ route('admin.pengerjaan') }}"
                            class="nav-item flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold text-slate-200 {{ request()->routeIs('admin.pengerjaan') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
@@ -151,91 +151,81 @@
                         </a>
 
                     @elseif($role === 'owner')
-                        <!-- 1. Dashboard Owner -->
+                        <!-- KHUSUS ROLE OWNER (Ukuran teks & padding diperbesar) -->
                         <a href="{{ route('owner.dashboard') }}"
-                           class="nav-item flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold text-slate-200 {{ request()->routeIs('owner.dashboard') ? 'active' : '' }}">
+                           class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('owner.dashboard') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg">📈</span>
+                                <span class="text-xl">📈</span>
                                 <span>Dashboard Eksekutif</span>
                             </div>
                         </a>
 
-                        <!-- 2. Laporan Keuangan & Transaksi -->
                         <a href="{{ route('owner.laporan') }}"
-                           class="nav-item flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold text-slate-200 {{ request()->routeIs('owner.laporan') ? 'active' : '' }}">
+                           class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('owner.laporan') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg">📑</span>
+                                <span class="text-xl">📑</span>
                                 <span>Laporan Keuangan</span>
                             </div>
                         </a>
 
-                        <!-- 3. Kelola Akun Admin (Menu Dipisahkan) -->
                         <a href="{{ route('owner.admin.index') }}"
-                           class="nav-item flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold text-slate-200 {{ request()->routeIs('owner.admin.index') ? 'active' : '' }}">
+                           class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('owner.admin.index') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg">👥</span>
+                                <span class="text-xl">👥</span>
                                 <span>Kelola Admin</span>
                             </div>
                         </a>
 
-                        <!-- 4. Daftar & Tarif Layanan -->
                         <a href="{{ route('owner.layanan') }}"
-                           class="nav-item flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold text-slate-200 {{ request()->routeIs('owner.layanan') ? 'active' : '' }}">
+                           class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('owner.layanan') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg">🧺</span>
+                                <span class="text-xl">🧺</span>
                                 <span>Katalog Tarif</span>
                             </div>
                         </a>
-                    @endif
 
-                    <div class="pt-3 border-t border-white/10 mt-3">
-                        <!-- Profil Pengguna -->
                         <a href="{{ route('profile') }}"
-                           class="nav-item flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold text-slate-200 {{ request()->routeIs('profile') ? 'active' : '' }}">
+                           class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('profile') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg">👤</span>
+                                <span class="text-xl">👤</span>
                                 <span>Profil Saya</span>
                             </div>
                         </a>
 
-                        <!-- Kunjungi Beranda Publik -->
                         <a href="{{ route('home') }}"
-                           class="nav-item flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold text-slate-200">
+                           class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg">🏠</span>
+                                <span class="text-xl">🏠</span>
                                 <span>Halaman Utama</span>
                             </div>
                         </a>
-                    </div>
+                    @endif
                 </nav>
             </div>
 
-            <!-- User Info Footer di Sidebar & Tombol Logout -->
+            <!-- User Info Footer di Sidebar & Tombol Logout Bawaan -->
             <div class="pt-5 border-t border-white/10 space-y-3">
-                <a href="{{ route('profile') }}"
-                   class="flex items-center gap-3 p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5"
-                   title="Klik untuk membuka profil">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-sky-400 text-white font-extrabold flex items-center justify-center shrink-0">
-                        {{ strtoupper(mb_substr($user->nama ?? 'A', 0, 1)) }}
-                    </div>
-                    <div class="overflow-hidden">
-                        <div class="font-bold text-sm text-white truncate">{{ $user->nama ?? 'User' }}</div>
-                        <div class="text-[11px] text-sky-200 font-semibold flex items-center gap-1">
-                            <span>Edit Profil</span>
-                            <span>&rarr;</span>
+                <div class="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-white/5 border border-white/5">
+                    <a href="{{ route('profile') }}" class="flex items-center gap-3 overflow-hidden group" title="Klik untuk membuka profil">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-sky-400 text-white font-extrabold flex items-center justify-center shrink-0">
+                            {{ strtoupper(mb_substr($user->nama ?? 'O', 0, 1)) }}
                         </div>
-                    </div>
-                </a>
+                        <div class="overflow-hidden">
+                            <div class="font-bold text-sm text-white truncate">{{ $user->nama ?? 'Owner' }}</div>
+                            <div class="text-[11px] text-sky-200 font-semibold truncate">{{ ucfirst($role) }}</div>
+                        </div>
+                    </a>
 
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit"
-                            onclick="return confirm('Apakah Anda yakin ingin keluar dari akun ArsyClean?')"
-                            class="w-full py-2.5 px-4 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-300 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-2 border border-rose-500/20">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        <span>Keluar Akun</span>
-                    </button>
-                </form>
+                    <form action="{{ route('logout') }}" method="POST" class="shrink-0">
+                        @csrf
+                        <button type="submit"
+                                onclick="return confirm('Apakah Anda yakin ingin keluar dari akun ArsyClean?')"
+                                class="py-2 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-300 hover:text-white font-bold text-xs transition-all flex items-center gap-1.5 border border-rose-500/20">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </aside>
 
@@ -247,7 +237,7 @@
             <!-- Top Navbar Header -->
             <header class="sticky top-0 z-30 bg-white border-b border-slate-200/80 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
                 <div class="flex items-center gap-3">
-                    <button type="button" onclick="toggleSidebar()" class="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50">
+                    <button type="button" onclick="toggleSidebar()" class="p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
                     <div>
@@ -257,7 +247,7 @@
                     </div>
                 </div>
 
-                <!-- Bagian Kanan Header: Profil Avatar + Standalone Logout -->
+                <!-- Bagian Kanan Header -->
                 <div class="flex items-center gap-3">
                     <a href="{{ route('profile') }}" class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-all text-slate-700">
                         <div class="w-8 h-8 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center">
@@ -269,6 +259,8 @@
                         </div>
                     </a>
 
+                    <!-- HANYA TAMPILKAN TOMBOL LOGOUT ATAS APABILA BUKAN OWNER -->
+                    @if($role !== 'owner')
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit"
@@ -278,6 +270,7 @@
                             <span class="hidden sm:inline">Logout</span>
                         </button>
                     </form>
+                    @endif
                 </div>
             </header>
 
@@ -328,12 +321,17 @@
         </div>
     </div>
 
+    <!-- Script Toggle Sidebar Bawaan Proyek -->
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('mainSidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
+            if (sidebar) {
+                sidebar.classList.toggle('-translate-x-full');
+            }
+            if (overlay) {
+                overlay.classList.toggle('hidden');
+            }
         }
     </script>
     @stack('scripts')
