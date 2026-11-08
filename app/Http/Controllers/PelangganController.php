@@ -79,6 +79,32 @@ class PelangganController extends Controller
     }
 
     /**
+     * Halaman Khusus: Katalog Layanan Laundry
+     */
+    public function layanan()
+    {
+        $user = Auth::user();
+        $layanans = Layanan::where('status', 'tersedia')->get();
+        return view('pelanggan.layanan', compact('user', 'layanans'));
+    }
+
+    /**
+     * Halaman Khusus: Riwayat Pesanan Pelanggan
+     */
+    public function riwayat(Request $request)
+    {
+        $user = Auth::user();
+        $query = Pesanan::with(['layanan', 'pembayaran', 'pengiriman', 'ulasan'])
+            ->where('id_user', $user->id_user);
+        if ($request->filled('status')) {
+            $query->where('status_pesanan', $request->status);
+        }
+        $pesanans = $query->orderByDesc('id_pesanan')->get();
+        return view('pelanggan.riwayat', compact('user', 'pesanans'));
+    }
+
+
+    /**
      * Membuat Pesanan Baru (1 Layanan = 1 Kode Pesanan Unik)
      */
     public function storePesanan(Request $request)

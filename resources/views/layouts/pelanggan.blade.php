@@ -143,22 +143,16 @@
                 Dashboard
             </a>
 
-            <!-- Tombol Pesan Laundry -->
-            <button type="button" class="ac-link" onclick="acTutupMenu(); if (typeof openOrderModal === 'function') openOrderModal();">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                Pesan Laundry
-            </button>
+            <!-- Katalog Layanan (Halaman Khusus) -->
+            <a href="{{ route('pelanggan.layanan') }}"
+               class="ac-link {{ request()->routeIs('pelanggan.layanan') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Katalog Layanan
+            </a>
 
-            <!-- Lacak Cucian Aktif -->
-            @if(isset($activePesanans) && $activePesanans->isNotEmpty())
-                <a href="{{ route('pelanggan.dashboard') }}#pesanan-aktif" class="ac-link" onclick="acTutupMenu()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg>
-                    Lacak Cucian
-                    <span class="ac-badge" style="background:#2563eb">{{ $activePesanans->count() }}</span>
-                </a>
-            @endif
-
-            <a href="{{ route('pelanggan.dashboard') }}#riwayat" class="ac-link" onclick="acTutupMenu()">
+            <!-- Riwayat Pesanan (Halaman Khusus) -->
+            <a href="{{ route('pelanggan.riwayat') }}"
+               class="ac-link {{ request()->routeIs('pelanggan.riwayat') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                 Riwayat Pesanan
                 @if($jumlahBelumBayar > 0)
@@ -217,6 +211,41 @@
                     {{ strtoupper(mb_substr($namaUser, 0, 1)) }}
                 </a>
             </div>
+
+            <!-- Global Alert Notifikasi Pelanggan -->
+            @if(session('success'))
+                <div class="mb-6 p-4 sm:p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 font-bold flex items-start gap-3.5 shadow-sm">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 text-base font-black">✓</div>
+                    <div class="flex-1">
+                        <div class="font-extrabold text-emerald-950 text-sm">Berhasil!</div>
+                        <div class="text-xs text-emerald-800 font-semibold mt-0.5 leading-relaxed">{{ session('success') }}</div>
+                    </div>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="mb-6 p-4 sm:p-5 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-900 font-bold flex items-start gap-3.5 shadow-sm">
+                    <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 text-base font-black">✕</div>
+                    <div class="flex-1">
+                        <div class="font-extrabold text-rose-950 text-sm">Perhatian: Terjadi Kesalahan!</div>
+                        <div class="text-xs text-rose-800 font-semibold mt-0.5 leading-relaxed">{{ session('error') }}</div>
+                    </div>
+                </div>
+            @endif
+
+            @if(isset($errors) && $errors->any())
+                <div class="mb-6 p-4 sm:p-5 rounded-2xl bg-rose-50 border-2 border-rose-400 text-rose-950 shadow-sm">
+                    <div class="flex items-center gap-2.5 font-black text-rose-900 text-sm mb-2">
+                        <span class="w-7 h-7 rounded-lg bg-rose-600 text-white flex items-center justify-center text-xs font-black">⚠️</span>
+                        <span>Mohon Periksa Kesalahan Formulir Berikut ({{ $errors->count() }} Poin):</span>
+                    </div>
+                    <ul class="list-disc list-inside text-xs font-bold text-rose-800 space-y-1 pl-2">
+                        @foreach($errors->all() as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             @yield('content')
         </div>

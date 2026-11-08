@@ -79,6 +79,14 @@ Route::middleware(['auth', CheckRole::class . ':pelanggan'])
         Route::get('/dashboard', [PelangganController::class, 'dashboard'])
             ->name('dashboard');
 
+        // Katalog Layanan (Halaman Khusus)
+        Route::get('/layanan', [PelangganController::class, 'layanan'])
+            ->name('layanan');
+
+        // Riwayat Pesanan (Halaman Khusus)
+        Route::get('/riwayat', [PelangganController::class, 'riwayat'])
+            ->name('riwayat');
+
         // Pemesanan Laundry
         Route::post('/pesanan', [PelangganController::class, 'storePesanan'])
             ->name('pesanan.store');
@@ -118,7 +126,23 @@ Route::middleware(['auth', CheckRole::class . ':admin'])
         Route::get('/dashboard', [AdminController::class, 'dashboard'])
             ->name('dashboard');
 
-        // Pengelolaan Pesanan
+        // Halaman Khusus Menu Sidebar Admin:
+        Route::get('/pesanan-masuk', [AdminController::class, 'pesananMasuk'])
+            ->name('pesanan_masuk');
+
+        Route::get('/pengerjaan', [AdminController::class, 'pengerjaan'])
+            ->name('pengerjaan');
+
+        Route::get('/pembayaran', [AdminController::class, 'pembayaran'])
+            ->name('pembayaran');
+
+        Route::get('/pengiriman', [AdminController::class, 'pengiriman'])
+            ->name('pengiriman');
+
+        Route::get('/stok', [AdminController::class, 'stok'])
+            ->name('stok');
+
+        // Pengelolaan Pesanan Aksi
         Route::post('/pesanan/{idPesanan}/terima', [AdminController::class, 'konfirmasiPesanan'])
             ->name('pesanan.konfirmasi');
 
@@ -154,6 +178,10 @@ Route::middleware(['auth', CheckRole::class . ':owner'])
         Route::get('/dashboard', [OwnerController::class, 'dashboard'])
             ->name('dashboard');
 
+        // Halaman Khusus Laporan Keuangan
+        Route::get('/laporan', [OwnerController::class, 'laporan'])
+            ->name('laporan');
+
         // Halaman Khusus Pengelolaan Admin (Dipisahkan dari Dashboard)
         Route::get('/admin', [OwnerController::class, 'adminIndex'])
             ->name('admin.index');
@@ -164,7 +192,10 @@ Route::middleware(['auth', CheckRole::class . ':owner'])
         Route::delete('/admin/{idAdmin}', [OwnerController::class, 'destroyAdmin'])
             ->name('admin.destroy');
 
-        // Pengaturan Tarif Layanan & Status Operasional
+        // Halaman Khusus Katalog & Tarif Layanan
+        Route::get('/layanan', [OwnerController::class, 'layanan'])
+            ->name('layanan');
+
         Route::post('/layanan/{idLayanan}', [OwnerController::class, 'updateLayanan'])
             ->name('layanan.update');
 

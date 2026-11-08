@@ -83,6 +83,77 @@ class AdminController extends Controller
     }
 
     /**
+     * Halaman Khusus: Pesanan Masuk (Menunggu Konfirmasi)
+     */
+    public function pesananMasuk()
+    {
+        $pesananMasuk = Pesanan::with(['layanan', 'pembayaran', 'user'])
+            ->whereHas('layanan', fn($q) => $q->where('jenis_layanan', '!=', 'Koin'))
+            ->whereIn('status_pesanan', ['Menunggu Pembayaran', 'Menunggu Verifikasi', 'Menunggu Konfirmasi', 'Pending', 'Baru'])
+            ->orderByDesc('id_pesanan')
+            ->get();
+        return view('admin.pesanan_masuk', compact('pesananMasuk'));
+    }
+
+    /**
+     * Halaman Khusus: Data Pengerjaan Laundry Bertahap
+     */
+    public function pengerjaan()
+    {
+        $pesananDiproses = Pesanan::with(['layanan', 'pembayaran', 'user', 'pengiriman'])
+            ->whereHas('layanan', fn($q) => $q->where('jenis_layanan', '!=', 'Koin'))
+            ->where('status_pesanan', 'Diproses')
+            ->where('status_laundry', '!=', 'Selesai')
+            ->orderByDesc('id_pesanan')
+            ->get();
+        $pesananSelesai = Pesanan::with(['layanan', 'pembayaran', 'user'])
+            ->whereHas('layanan', fn($q) => $q->where('jenis_layanan', '!=', 'Koin'))
+            ->where(fn($q) => $q->where('status_pesanan', 'Selesai')->orWhere('status_laundry', 'Selesai'))
+            ->orderByDesc('id_pesanan')
+            ->take(25)
+            ->get();
+        return view('admin.pengerjaan', compact('pesananDiproses', 'pesananSelesai'));
+    }
+
+    /**
+     * Halaman Khusus: Verifikasi Pembayaran
+     */
+    public function pembayaran()
+    {
+        $pembayarans = Pembayaran::with(['pesanan.user', 'pesanan.layanan'])
+            ->whereHas('pesanan.layanan', fn($q) => $q->where('jenis_layanan', '!=', 'Koin'))
+            ->orderByDesc('id_pembayaran')
+            ->get();
+        return view('admin.pembayaran', compact('pembayarans'));
+    }
+
+    /**
+     * Halaman Khusus: Pengiriman & Kurir
+     */
+    public function pengiriman()
+    {
+        $pengirimans = Pengiriman::with(['pesanan.user', 'pesanan.layanan'])
+            ->orderByDesc('id_pengiriman')
+            ->get();
+        $pesananSiapKirim = Pesanan::with(['layanan', 'user'])
+            ->whereHas('layanan', fn($q) => $q->where('jenis_layanan', 'Antar Jemput'))
+            ->where('status_pesanan', 'Diproses')
+            ->whereDoesntHave('pengiriman')
+            ->get();
+        return view('admin.pengiriman', compact('pengirimans', 'pesananSiapKirim'));
+    }
+
+    /**
+     * Halaman Khusus: Stok Bahan Baku
+     */
+    public function stok()
+    {
+        $stoks = Stok::orderBy('id_stok')->get();
+        return view('admin.stok', compact('stoks'));
+    }
+
+
+    /**
      * MENERIMA PESANAN MASUK
      */
     public function konfirmasiPesanan($idPesanan)

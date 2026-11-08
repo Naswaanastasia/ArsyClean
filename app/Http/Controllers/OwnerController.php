@@ -78,6 +78,33 @@ class OwnerController extends Controller
     }
 
     /**
+     * Halaman Khusus: Laporan Keuangan & Transaksi
+     */
+    public function laporan(Request $request)
+    {
+        $query = Pembayaran::with(['pesanan.user', 'pesanan.layanan']);
+        if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
+            $query->whereBetween('created_at', [
+                $request->tanggal_mulai . ' 00:00:00',
+                $request->tanggal_selesai . ' 23:59:59'
+            ]);
+        }
+        $pembayarans = $query->orderByDesc('id_pembayaran')->get();
+        $totalOmzet = (float) $pembayarans->where('status_pembayaran', 'Lunas')->sum('jumlah_bayar');
+        return view('owner.laporan', compact('pembayarans', 'totalOmzet'));
+    }
+
+    /**
+     * Halaman Khusus: Tarif & Monitoring Layanan
+     */
+    public function layanan()
+    {
+        $layanans = Layanan::orderBy('id_layanan')->get();
+        return view('owner.layanan', compact('layanans'));
+    }
+
+
+    /**
      * Halaman Khusus Pengelolaan Akun Admin (Dipisahkan dari Dashboard)
      */
     public function adminIndex()
