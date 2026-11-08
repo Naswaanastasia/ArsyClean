@@ -10,6 +10,19 @@ class Pesanan extends Model
 
     protected $primaryKey = 'id_pesanan';
 
+    /**
+     * Urutan lengkap tahap laundry.
+     */
+    public const TAHAP_LAUNDRY = [
+        'Menunggu Antrean',
+        'Pencucian',
+        'Pengeringan',
+        'Setrika',
+        'Siap Diambil',
+        'Dalam Pengiriman',
+        'Selesai',
+    ];
+
     protected $fillable = [
         'kode_pesanan',
         'id_user',
@@ -85,5 +98,49 @@ class Pesanan extends Model
             'id_pesanan',
             'id_pesanan'
         );
+    }
+
+    /**
+     * Apakah pesanan ini memakai tahap pengiriman kurir?
+     * (aturannya sama dengan yang dulu ada di AdminController)
+     */
+    public function pakaiPengiriman(): bool
+    {
+        return $this->layanan->contains(function ($item) {
+            return in_array(
+                strtolower($item->jenis_layanan ?? ''),
+                ['antar jemput', 'pickup']
+            );
+        });
+    }
+
+    /**
+     * Daftar tahap laundry untuk pesanan ini.
+     * Kalau tidak memakai kurir, tahap "Dalam Pengiriman" dilewati.
+     */
+    public function daftarTahapLaundry(): array
+    {
+        $tahap = self::TAHAP_LAUNDRY;
+
+        if (!$this->pakaiPengiriman()) {
+            $tahap = array_values(array_diff($tahap, ['Dalam Pengiriman']));
+        }
+
+        return $tahap;
+    }
+
+    /**
+     * Tahap yang boleh dipilih admin berikutnya (null = sudah tahap akhir).
+     */
+    public function tahapLaundryBerikutnya(): ?string
+    {
+        $tahap = $this->daftarTahapLaundry();
+        $posisi = array_search($this->status_laundry, $tahap);
+
+        if ($posisi === false) {
+            return null;
+        }
+
+        return $tahap[$posisi + 1] ?? null;
     }
 }

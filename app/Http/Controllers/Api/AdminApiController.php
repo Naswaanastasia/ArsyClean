@@ -3,91 +3,134 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pesanan;
+use App\Models\Pembayaran;
+use App\Models\Pengiriman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AdminApiController extends Controller
 {
-    // 1. Ambil Semua Pesanan Masuk (Kelola Pesanan)
+    /**
+     * 1. Ambil Semua Pesanan Masuk & Aktif
+     */
     public function getSemuaPesanan()
     {
-        $pesanan = DB::table('pesanan')
-            ->join('users', 'pesanan.user_id', '=', 'users.id')
-            ->join('layanan', 'pesanan.layanan_id', '=', 'layanan.id')
-            ->select(
-                'pesanan.*',
-                'users.name as nama_pelanggan',
-                'layanan.nama_layanan'
-            )
-            ->orderBy('pesanan.created_at', 'desc')
+        $pesanan = Pesanan::with(['user:id_user,nama,email,no_hp', 'layanan', 'pembayaran', 'pengiriman'])
+            ->orderByDesc('id_pesanan')
             ->get();
 
-        return response()->json(['success' => true, 'data' => $pesanan], 200);
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar semua pesanan berhasil diambil.',
+            'total'   => $pesanan->count(),
+            'data'    => $pesanan
+        ], 200);
     }
 
-    // 2. Update Status Proses Laundry (misal: 'Dicuci', 'Selesai')
+    /**
+     * 2. Update Status Proses Laundry / Pesanan
+     */
     public function updateStatusPesanan(Request $request, $id)
     {
         $request->validate([
-            'status_pesanan' => 'required|string'
+            'status_pesanan' => 'nullable|in:Menunggu Pembayaran,Menunggu Verifikasi,Diproses,Selesai,Dibatalkan',
+            'status_laundry' => 'nullable|in:Menunggu Antrean,Pencucian,Pengeringan,Setrika,Siap Diambil,Siap Dikirim,Dalam Pengiriman,Selesai',
+            'catatan_admin'  => 'nullable|string|max:500',
+        ], [
+            'status_pesanan.in' => 'Status pesanan harus salah satu dari: Menunggu Pembayaran, Menunggu Verifikasi, Diproses, Selesai, Dibatalkan.',
+            'status_laundry.in' => 'Status laundry harus salah satu dari: Menunggu Antrean, Pencucian, Pengeringan, Setrika, Siap Diambil, Siap Dikirim, Dalam Pengiriman, Selesai.',
         ]);
 
-        DB::table('pesanan')
-            ->where('id', $id)
-            ->update([
-                'status_pesanan' => $request->status_pesanan,
-                'updated_at' => now()
-            ]);
+        $pesanan = Pesanan::findOrFail($id);
 
-        return response()->json(['success' => true, 'message' => 'Status pesanan berhasil diperbarui!'], 200);
+        if ($request->filled('status_pesanan')) {
+            $pesanan->status_pesanan = $request->status_pesanan;
+        }
+
+        if ($request->filled('status_laundry')) {
+            $pesanan->status_laundry = $request->status_laundry;
+            if ($request->status_laundry === 'Selesai') {
+                $pesanan->status_pesanan = 'Selesai';
+            }
+        }
+
+        if ($request->filled('catatan_admin')) {
+            $pesanan->catatan = trim(($pesanan->catatan ?? '') . "\n[Catatan Admin: " . $request->catatan_admin . "]");
+        }
+
+        $pesanan->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Status pesanan #{$pesanan->kode_pesanan} berhasil diperbarui.",
+            'data'    => $pesanan
+        ], 200);
     }
 
-    // 3. Verifikasi Pembayaran Pelanggan
+    /**
+     * 3. Verifikasi Pembayaran Pelanggan
+     */
     public function verifikasiPembayaran(Request $request, $idPembayaran)
     {
         $request->validate([
-            'status' => 'required|in:Lunas,Ditolak',
-            'verifikator_id' => 'required'
+            'status'      => 'required|in:Lunas,Gagal,Ditolak',
+            'verifikator' => 'nullable|string|max:100',
+        ], [
+            'status.required' => 'Status verifikasi pembayaran wajib diisi.',
+            'status.in'       => 'Pilihan status pembayaran harus: Lunas, Gagal, atau Ditolak.',
         ]);
 
-        $pembayaran = DB::table('pembayaran')->where('id', $idPembayaran)->first();
-        if (!$pembayaran) {
-            return response()->json(['success' => false, 'message' => 'Data pembayaran tidak ditemukan'], 404);
-        }
+        $pembayaran = Pembayaran::with('pesanan')->findOrFail($idPembayaran);
 
-        // Update status di tabel pembayaran
-        DB::table('pembayaran')
-            ->where('id', $idPembayaran)
-            ->update([
-                'status' => $request->status,
-                'updated_at' => now()
-            ]);
+        DB::transaction(function () use ($pembayaran, $request) {
+            $statusTujuan = $request->status === 'Ditolak' ? 'Gagal' : $request->status;
+            $pembayaran->status_pembayaran = $statusTujuan;
+            $pembayaran->verifikator = $request->verifikator ?? (auth()->user()->nama ?? 'Admin Operasional');
 
-        // Update status pembayaran di tabel pesanan
-        DB::table('pesanan')
-            ->where('id', $pembayaran->pesanan_id)
-            ->update([
-                'status_pembayaran' => $request->status,
-                'updated_at' => now()
-            ]);
+            if ($statusTujuan === 'Lunas') {
+                $pembayaran->tanggal_bayar = now();
+                if ($pembayaran->pesanan) {
+                    $pembayaran->pesanan->status_pesanan = 'Diproses';
+                    $pembayaran->pesanan->save();
+                }
+            } elseif ($statusTujuan === 'Gagal') {
+                if ($pembayaran->pesanan) {
+                    $pembayaran->pesanan->status_pesanan = 'Dibatalkan';
+                    $pembayaran->pesanan->save();
+                }
+            }
 
-        return response()->json(['success' => true, 'message' => 'Status pembayaran berhasil diupdate!'], 200);
+            $pembayaran->save();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Status pembayaran #{$pembayaran->kode_pembayaran} berhasil diperbarui menjadi {$pembayaran->status_pembayaran}.",
+            'data'    => $pembayaran
+        ], 200);
     }
 
-    // 4. Update Status Pengiriman / Penjemputan Kurir
+    /**
+     * 4. Update Status Pengiriman Kurir
+     */
     public function updateStatusPengiriman(Request $request, $idPengiriman)
     {
         $request->validate([
-            'status_pengiriman' => 'required|string'
+            'status_pengiriman' => 'required|in:Dijadwalkan,Dalam Perjalanan,Terkirim,Gagal',
+        ], [
+            'status_pengiriman.required' => 'Status pengiriman kurir wajib diisi.',
+            'status_pengiriman.in'       => 'Pilihan status pengiriman harus: Dijadwalkan, Dalam Perjalanan, Terkirim, atau Gagal.',
         ]);
 
-        DB::table('pengiriman')
-            ->where('id', $idPengiriman)
-            ->update([
-                'status_pengiriman' => $request->status_pengiriman,
-                'updated_at' => now()
-            ]);
+        $pengiriman = Pengiriman::findOrFail($idPengiriman);
+        $pengiriman->status_pengiriman = $request->status_pengiriman;
+        $pengiriman->save();
 
-        return response()->json(['success' => true, 'message' => 'Status pengiriman berhasil diperbarui!'], 200);
+        return response()->json([
+            'success' => true,
+            'message' => "Status pengiriman #{$pengiriman->kode_pengiriman} berhasil diperbarui menjadi {$pengiriman->status_pengiriman}.",
+            'data'    => $pengiriman
+        ], 200);
     }
 }

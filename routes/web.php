@@ -8,23 +8,25 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Middleware\CheckRole;
 
+// ==========================================
+// 1. MIDTRANS WEBHOOK NOTIFICATION
+// ==========================================
 Route::post('/midtrans/notification', [
     MidtransWebhookController::class,
     'handle'
 ])->name('midtrans.notification');
+
 // ==========================================
-// 1. LANDING PAGE
+// 2. LANDING PAGE / HOMEPAGE
 // ==========================================
 Route::get('/', function () {
     return view('landing');
 })->name('home');
 
-
 // ==========================================
-// 2. KHUSUS GUEST (BELUM LOGIN)
+// 3. AUTENTIKASI (KHUSUS GUEST / BELUM LOGIN)
 // ==========================================
 Route::middleware('guest')->group(function () {
-
     // Form Login Utama
     Route::get('/login', [RoleAuthController::class, 'showPortal'])
         ->name('login');
@@ -33,7 +35,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [RoleAuthController::class, 'processLogin'])
         ->name('login.process');
 
-    // Halaman Login Per Role
+    // Shortcut Halaman Login Per Role
     Route::get('/login/pelanggan', [RoleAuthController::class, 'showLoginPelanggan'])
         ->name('login.pelanggan');
 
@@ -43,7 +45,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/login/owner', [RoleAuthController::class, 'showLoginOwner'])
         ->name('login.owner');
 
-    // Registrasi Pelanggan
+    // Registrasi Akun Pelanggan
     Route::get('/register', [RoleAuthController::class, 'showRegister'])
         ->name('register');
 
@@ -51,120 +53,122 @@ Route::middleware('guest')->group(function () {
         ->name('register.process');
 });
 
+// ==========================================
+// 4. USER YANG SUDAH LOGIN (AUTH SEMUA ROLE)
+// ==========================================
+Route::middleware('auth')->group(function () {
+    // Logout Akun
+    Route::match(['get', 'post'], '/logout', [RoleAuthController::class, 'logout'])
+        ->name('logout');
+
+    // Lihat & Edit Profil Pengguna (Bisa diklik dari navbar/sidebar)
+    Route::get('/profile', [RoleAuthController::class, 'showProfile'])
+        ->name('profile');
+
+    Route::post('/profile', [RoleAuthController::class, 'updateProfile'])
+        ->name('profile.update');
+});
 
 // ==========================================
-// 3. LOGOUT (KHUSUS PENGGUNA YANG SUDAH LOGIN)
-// ==========================================
-
-Route::match(['get', 'post'], '/logout', [RoleAuthController::class, 'logout'])
-    ->name('logout');
-
-
-// ==========================================
-// 4. DASHBOARD DAN FITUR PELANGGAN
+// 5. ROLE PELANGGAN
 // ==========================================
 Route::middleware(['auth', CheckRole::class . ':pelanggan'])
     ->prefix('pelanggan')
     ->name('pelanggan.')
     ->group(function () {
-
         Route::get('/dashboard', [PelangganController::class, 'dashboard'])
             ->name('dashboard');
 
+        // Pemesanan Laundry
         Route::post('/pesanan', [PelangganController::class, 'storePesanan'])
             ->name('pesanan.store');
 
-        // BARU: cek status pembayaran otomatis
+        // Cek status pesanan realtime berdasarkan kode pesanan
         Route::get('/pesanan/{kode}/status', [PelangganController::class, 'statusPesanan'])
             ->name('pesanan.status');
 
+        // Modal detail pesanan interaktif & aksi
+        Route::get('/pesanan/{id}/detail', [PelangganController::class, 'detailPesanan'])
+            ->name('pesanan.detail');
+
+        // Cetak struk/nota pesanan PDF kapan saja
+        Route::get('/pesanan/{id}/nota', [PelangganController::class, 'cetakNotaPdf'])
+            ->name('pesanan.nota');
+
+        // Upload bukti pembayaran transfer manual / QR manual
+        Route::post('/pesanan/{id}/upload-bukti', [PelangganController::class, 'uploadBuktiPembayaran'])
+            ->name('pembayaran.upload');
+
+        // SVG QRIS Manual ArsyClean jika Midtrans belum acc
+        Route::get('/qris-manual/{kode}', [PelangganController::class, 'generateQrisManual'])
+            ->name('qris.manual');
+
+        // Kirim Ulasan Layanan
         Route::post('/ulasan/{idPesanan}', [PelangganController::class, 'storeUlasan'])
             ->name('ulasan.store');
     });
+
 // ==========================================
-// 5. DASHBOARD DAN FITUR ADMIN
+// 6. ROLE ADMIN
 // ==========================================
 Route::middleware(['auth', CheckRole::class . ':admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-
-        // Dashboard Admin
         Route::get('/dashboard', [AdminController::class, 'dashboard'])
             ->name('dashboard');
 
-
-        // ----------------------------------
-        // A. PENGELOLAAN PESANAN
-        // ----------------------------------
-
-        // Menerima pesanan
+        // Pengelolaan Pesanan
         Route::post('/pesanan/{idPesanan}/terima', [AdminController::class, 'konfirmasiPesanan'])
             ->name('pesanan.konfirmasi');
 
-        // Menolak pesanan
         Route::post('/pesanan/{idPesanan}/tolak', [AdminController::class, 'tolakPesanan'])
             ->name('pesanan.tolak');
 
-        // Memperbarui status laundry
         Route::post('/pesanan/{idPesanan}/status', [AdminController::class, 'updateStatusLaundry'])
             ->name('pesanan.status');
 
-
-        // ----------------------------------
-        // B. PEMBAYARAN
-        // ----------------------------------
+        // Verifikasi Pembayaran Pelanggan
         Route::post('/pembayaran/{idPembayaran}/verifikasi', [AdminController::class, 'verifikasiPembayaran'])
             ->name('pembayaran.verifikasi');
 
-
-        // ----------------------------------
-        // C. PENGELOLAAN STOK
-        // ----------------------------------
+        // Manajemen Stok Bahan Baku
         Route::post('/stok/{idStok}', [AdminController::class, 'updateStok'])
             ->name('stok.update');
 
-
-        // ----------------------------------
-        // D. PENGIRIMAN DAN KURIR
-        // ----------------------------------
-
-        // Menambahkan penugasan kurir
+        // Pengiriman Kurir
         Route::post('/pengiriman', [AdminController::class, 'simpanPengiriman'])
             ->name('pengiriman.store');
 
-        // Memperbarui status pengiriman
         Route::post('/pengiriman/{idPengiriman}/status', [AdminController::class, 'updateStatusPengiriman'])
             ->name('pengiriman.status');
     });
 
-
-
 // ==========================================
-// 6. DASHBOARD DAN FITUR OWNER
+// 7. ROLE OWNER
 // ==========================================
 Route::middleware(['auth', CheckRole::class . ':owner'])
     ->prefix('owner')
     ->name('owner.')
     ->group(function () {
-
-        // Dashboard Owner
         Route::get('/dashboard', [OwnerController::class, 'dashboard'])
             ->name('dashboard');
 
-        // Cetak laporan
-        Route::get('/cetak-laporan', [OwnerController::class, 'cetakLaporanPdf'])
-            ->name('cetak.laporan');
+        // Halaman Khusus Pengelolaan Admin (Dipisahkan dari Dashboard)
+        Route::get('/admin', [OwnerController::class, 'adminIndex'])
+            ->name('admin.index');
 
-        // Mengatur tarif dan status layanan
-        Route::post('/layanan/{idLayanan}', [OwnerController::class, 'updateLayanan'])
-            ->name('layanan.update');
-
-        // Menambahkan akun Admin
         Route::post('/admin', [OwnerController::class, 'storeAdmin'])
             ->name('admin.store');
 
-        // Menghapus akun Admin
         Route::delete('/admin/{idAdmin}', [OwnerController::class, 'destroyAdmin'])
             ->name('admin.destroy');
+
+        // Pengaturan Tarif Layanan & Status Operasional
+        Route::post('/layanan/{idLayanan}', [OwnerController::class, 'updateLayanan'])
+            ->name('layanan.update');
+
+        // Cetak Laporan Omzet & Keuangan PDF
+        Route::get('/cetak-laporan', [OwnerController::class, 'cetakLaporanPdf'])
+            ->name('cetak.laporan');
     });

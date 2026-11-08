@@ -1,910 +1,351 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArsyClean Laundry | Laundry Jadi Lebih Mudah</title>
-
+    <title>ArsyClean Laundry - Layanan Cuci Koin, Reguler & Antar-Jemput 24 Jam</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            color: #172b4d;
-            background: #ffffff;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .container {
-            width: min(1160px, 90%);
-            margin: auto;
-        }
-
-        /* NAVBAR */
-        .navbar {
-            height: 82px;
-            display: flex;
-            align-items: center;
-            background: #fff;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid #edf1f7;
-        }
-
-        .nav-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-icon {
-            width: 43px;
-            height: 43px;
-            background: #e8f2ff;
-            color: #1768d5;
-            border-radius: 13px;
-            display: grid;
-            place-items: center;
-            font-size: 23px;
-        }
-
-        .logo-name {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 21px;
-            font-weight: 800;
-            color: #153b73;
-        }
-
-        .logo-name span {
-            color: #2679e8;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 34px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #52647d;
-        }
-
-        .nav-links a:hover {
-            color: #1768d5;
-        }
-
-        .nav-action {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .login-link {
-            color: #1768d5;
-        }
-
-        .btn {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            padding: 13px 23px;
-            border-radius: 9px;
-            font-size: 14px;
-            font-weight: 700;
-            transition: .25s;
-        }
-
-        .btn-primary {
-            background: #1768d5;
-            color: white;
-            box-shadow: 0 6px 16px rgba(23,104,213,.17);
-        }
-
-        .btn-primary:hover {
-            background: #1055b5;
-            transform: translateY(-2px);
-        }
-
-        .btn-outline {
-            border: 1px solid #cbdcf1;
-            color: #1768d5;
-        }
-
-        /* HERO */
-        .hero {
-            background: linear-gradient(110deg, #f1f7ff 0%, #f8fbff 58%, #e6f1ff 100%);
-            padding: 75px 0 80px;
-            overflow: hidden;
-        }
-
-        .hero-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            align-items: center;
-            gap: 55px;
-        }
-
-        .hero-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            background: #e2efff;
-            color: #1768d5;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 22px;
-        }
-
-        .hero h1 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: clamp(36px, 4.5vw, 56px);
-            line-height: 1.2;
-            letter-spacing: -2px;
-            color: #153b73;
-            margin-bottom: 22px;
-        }
-
-        .hero h1 span {
-            color: #2679e8;
-        }
-
-        .hero-description {
-            color: #65758c;
-            font-size: 16px;
-            line-height: 1.9;
-            max-width: 490px;
-            margin-bottom: 30px;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 13px;
-            flex-wrap: wrap;
-        }
-
-        .hero-note {
-            margin-top: 28px;
-            color: #718096;
-            font-size: 12px;
-        }
-
-        .hero-image {
-            position: relative;
-        }
-
-        .hero-image img {
-            width: 100%;
-            height: 410px;
-            object-fit: cover;
-            border-radius: 25px;
-            box-shadow: 0 20px 55px rgba(36,75,125,.15);
-        }
-
-        .floating-card {
-            position: absolute;
-            left: -25px;
-            bottom: 25px;
-            background: white;
-            border-radius: 14px;
-            padding: 17px 20px;
-            box-shadow: 0 10px 30px rgba(30,60,100,.12);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .floating-icon {
-            width: 42px;
-            height: 42px;
-            display: grid;
-            place-items: center;
-            border-radius: 12px;
-            background: #e8f3ff;
-            font-size: 21px;
-        }
-
-        .floating-card strong {
-            display: block;
-            font-size: 13px;
-            margin-bottom: 4px;
-        }
-
-        .floating-card small {
-            color: #8390a3;
-            font-size: 11px;
-        }
-
-        /* SECTION GENERAL */
-        section {
-            padding: 85px 0;
-        }
-
-        .section-heading {
-            text-align: center;
-            max-width: 620px;
-            margin: 0 auto 45px;
-        }
-
-        .section-label {
-            color: #2679e8;
-            text-transform: uppercase;
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            margin-bottom: 13px;
-        }
-
-        .section-heading h2 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 33px;
-            color: #153b73;
-            margin-bottom: 13px;
-        }
-
-        .section-heading p {
-            font-size: 14px;
-            line-height: 1.8;
-            color: #7b8798;
-        }
-
-        /* SERVICES */
-        .services {
-            background: #fff;
-        }
-
-        .service-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 23px;
-        }
-
-        .service-card {
-            border: 1px solid #e9eff7;
-            border-radius: 17px;
-            overflow: hidden;
-            background: white;
-            transition: .3s;
-        }
-
-        .service-card:hover {
-            transform: translateY(-7px);
-            box-shadow: 0 15px 35px rgba(30,75,130,.10);
-        }
-
-        .service-card img {
-            width: 100%;
-            height: 205px;
-            object-fit: cover;
-        }
-
-        .service-body {
-            padding: 23px;
-        }
-
-        .service-body h3 {
-            color: #193e73;
-            font-size: 19px;
-            margin-bottom: 10px;
-        }
-
-        .service-body p {
-            color: #78869a;
-            font-size: 13px;
-            line-height: 1.8;
-            min-height: 70px;
-        }
-
-        .service-link {
-            display: inline-block;
-            margin-top: 17px;
-            color: #1768d5;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        /* WHY US */
-        .advantages {
-            background: #f5f9ff;
-        }
-
-        .advantage-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-        }
-
-        .advantage-card {
-            background: white;
-            border-radius: 15px;
-            padding: 27px 20px;
-            border: 1px solid #edf1f7;
-        }
-
-        .advantage-icon {
-            width: 48px;
-            height: 48px;
-            display: grid;
-            place-items: center;
-            background: #e9f3ff;
-            border-radius: 13px;
-            font-size: 23px;
-            margin-bottom: 19px;
-        }
-
-        .advantage-card h3 {
-            font-size: 15px;
-            color: #1c426f;
-            margin-bottom: 9px;
-        }
-
-        .advantage-card p {
-            font-size: 12px;
-            line-height: 1.8;
-            color: #8190a3;
-        }
-
-        /* HOW IT WORKS */
-        .steps-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 25px;
-        }
-
-        .step-card {
-            text-align: center;
-            padding: 20px 15px;
-        }
-
-        .step-number {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #1768d5;
-            color: white;
-            font-weight: 800;
-            display: grid;
-            place-items: center;
-            margin: 0 auto 17px;
-        }
-
-        .step-card h3 {
-            color: #193e73;
-            font-size: 15px;
-            margin-bottom: 9px;
-        }
-
-        .step-card p {
-            color: #8190a3;
-            font-size: 12px;
-            line-height: 1.8;
-        }
-
-        /* ABOUT */
-        .about {
-            background: #f5f9ff;
-        }
-
-        .about-content {
-            display: grid;
-            grid-template-columns: .9fr 1.1fr;
-            gap: 55px;
-            align-items: center;
-        }
-
-        .about-image img {
-            width: 100%;
-            height: 350px;
-            object-fit: cover;
-            border-radius: 20px;
-        }
-
-        .about-text h2 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 32px;
-            color: #153b73;
-            margin-bottom: 18px;
-        }
-
-        .about-text p {
-            color: #718096;
-            font-size: 14px;
-            line-height: 1.9;
-            margin-bottom: 20px;
-        }
-
-        /* CTA */
-        .cta {
-            padding: 65px 0;
-        }
-
-        .cta-box {
-            background: linear-gradient(110deg, #1457ae, #287ee7);
-            border-radius: 22px;
-            padding: 48px 30px;
-            text-align: center;
-            color: white;
-        }
-
-        .cta-box h2 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 30px;
-            margin-bottom: 13px;
-        }
-
-        .cta-box p {
-            color: #dceaff;
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
-
-        .cta-box .btn {
-            background: white;
-            color: #1768d5;
-        }
-
-        /* FOOTER */
-        footer {
-            background: #102d52;
-            color: white;
-            padding: 48px 0 22px;
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr;
-            gap: 40px;
-            padding-bottom: 35px;
-        }
-
-        .footer-brand h3 {
-            font-size: 21px;
-            margin-bottom: 13px;
-        }
-
-        .footer-brand p,
-        .footer-column p {
-            color: #b7c9df;
-            font-size: 12px;
-            line-height: 1.9;
-        }
-
-        .footer-column h4 {
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-
-        .footer-column a {
-            display: block;
-            color: #b7c9df;
-            font-size: 12px;
-            margin-bottom: 11px;
-        }
-
-        .footer-bottom {
-            border-top: 1px solid #345070;
-            padding-top: 20px;
-            text-align: center;
-            color: #a8bdd5;
-            font-size: 11px;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 850px) {
-            .nav-links {
-                display: none;
-            }
-
-            .hero-content,
-            .about-content {
-                grid-template-columns: 1fr;
-            }
-
-            .hero-image {
-                margin-top: 15px;
-            }
-
-            .service-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .advantage-grid,
-            .steps-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        @media (max-width: 550px) {
-            .nav-action {
-                gap: 10px;
-            }
-
-            .nav-action .btn {
-                padding: 10px 13px;
-            }
-
-            .logo-name {
-                font-size: 17px;
-            }
-
-            .hero {
-                padding: 55px 0;
-            }
-
-            .hero-image img {
-                height: 270px;
-            }
-
-            .floating-card {
-                left: 8px;
-            }
-
-            section {
-                padding: 60px 0;
-            }
-
-            .service-grid,
-            .advantage-grid,
-            .steps-grid,
-            .footer-content {
-                grid-template-columns: 1fr;
-            }
-
-            .section-heading h2,
-            .about-text h2 {
-                font-size: 27px;
-            }
-
-            .cta-box h2 {
-                font-size: 24px;
-            }
-        }
+        body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; font-size: 16px; }
+        html { scroll-behavior: smooth; }
     </style>
 </head>
+<body class="bg-white text-slate-800 antialiased">
 
-<body>
-
-    <!-- NAVBAR -->
-    <header class="navbar">
-        <div class="container nav-content">
-            <a href="/" class="logo">
-                <div class="logo-icon">♧</div>
-                <div class="logo-name">Arsy<span>Clean</span></div>
+    <!-- Top Navigation Bar -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <a href="{{ route('home') }}" class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center font-black text-white text-xl shadow-md shadow-sky-500/20">
+                    A
+                </div>
+                <div>
+                    <span class="font-extrabold text-2xl text-slate-900 tracking-tight block">ArsyClean</span>
+                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest block -mt-1">Laundry Service</span>
+                </div>
             </a>
 
-            <nav class="nav-links">
-                <a href="#beranda">Beranda</a>
-                <a href="#layanan">Layanan</a>
-                <a href="#keunggulan">Keunggulan</a>
-                <a href="#tentang">Tentang Kami</a>
-            </nav>
+            <!-- Navigation Links -->
+            <div class="hidden md:flex items-center gap-8 text-sm font-bold text-slate-600">
+                <a href="#beranda" class="hover:text-blue-600 transition">Beranda</a>
+                <a href="#katalog" class="hover:text-blue-600 transition">Katalog Layanan</a>
+                <a href="#keunggulan" class="hover:text-blue-600 transition">Keunggulan</a>
+                <a href="#cara-pesan" class="hover:text-blue-600 transition">Cara Pesan</a>
+                <a href="#kontak" class="hover:text-blue-600 transition">Kontak</a>
+            </div>
 
-            <div class="nav-action">
-                <a href="{{ url('/login') }}" class="login-link">Masuk</a>
-                <a href="{{ url('/login') }}" class="btn btn-primary">Mulai Sekarang</a>
+            <!-- Auth Buttons -->
+            <div class="flex items-center gap-3">
+                @auth
+                    @php
+                        $role = Auth::user()->role;
+                        $dashRoute = match($role) {
+                            'admin' => route('admin.dashboard'),
+                            'owner' => route('owner.dashboard'),
+                            default => route('pelanggan.dashboard'),
+                        };
+                    @endphp
+                    <a href="{{ $dashRoute }}" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm rounded-xl shadow-md shadow-blue-600/30 transition flex items-center gap-2">
+                        <span>📊</span> Buka Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="px-4 py-2.5 text-slate-700 hover:text-blue-600 font-extrabold text-sm transition">
+                        Masuk
+                    </a>
+                    <a href="{{ route('register') }}" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm rounded-xl shadow-md shadow-blue-600/30 transition">
+                        Daftar Baru
+                    </a>
+                @endauth
             </div>
         </div>
-    </header>
+    </nav>
 
-    <main>
-
-        <!-- HERO -->
-        <section class="hero" id="beranda">
-            <div class="container hero-content">
-                <div>
-                    <div class="hero-label">✦ Layanan Laundry Lebih Praktis</div>
-
-                    <h1>
-                        Urusan Laundry Jadi Lebih <span>Mudah.</span>
+    <!-- Hero Section -->
+    <section id="beranda" class="relative overflow-hidden bg-gradient-to-b from-blue-50/60 via-white to-slate-50 py-16 sm:py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-blue-100 text-blue-800">
+                        ✨ Layanan Laundry Antar-Jemput No. 1
+                    </div>
+                    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-tight tracking-tight">
+                        Laundry Jadi Lebih <span class="text-blue-600">Mudah, Cepat</span> &amp; Terawat.
                     </h1>
-
-                    <p class="hero-description">
-                        Pakaian bersih dan terawat tanpa harus repot.
-                        ArsyClean hadir dengan berbagai pilihan layanan
-                        laundry yang praktis, mudah, dan sesuai kebutuhanmu.
+                    <p class="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                        Tidak perlu repot mencuci sendiri. Pesan pick up laundry langsung dari rumah Anda, pantau proses pencucian realtime, dan pakaian wangi rapi siap dipakai.
                     </p>
 
-                    <div class="hero-buttons">
-                        <a href="#layanan" class="btn btn-primary">
-                            Lihat Layanan →
-                        </a>
-
-                        <a href="{{ url('/login') }}" class="btn btn-outline">
-                            Masuk Akun
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                        @auth
+                            <a href="{{ route('pelanggan.dashboard') }}" class="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-base rounded-2xl shadow-xl shadow-blue-600/30 transition-all text-center">
+                                Pesan Laundry Sekarang &rarr;
+                            </a>
+                        @else
+                            <a href="{{ route('register') }}" class="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-base rounded-2xl shadow-xl shadow-blue-600/30 transition-all text-center">
+                                Mulai Pesan Laundry &rarr;
+                            </a>
+                        @endauth
+                        <a href="#katalog" class="w-full sm:w-auto px-7 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-base rounded-2xl transition text-center">
+                            Lihat Katalog Layanan
                         </a>
                     </div>
 
-                    <p class="hero-note">
-                        Solusi laundry untuk aktivitas sehari-hari.
-                    </p>
-                </div>
-
-                <div class="hero-image">
-                    <img
-                        src="https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?w=1000"
-                        alt="Layanan laundry ArsyClean">
-
-                    <div class="floating-card">
-                        <div class="floating-icon">🧺</div>
+                    <!-- Mini Stats -->
+                    <div class="grid grid-cols-3 gap-4 pt-8 border-t border-slate-200/80 max-w-md mx-auto lg:mx-0 text-center sm:text-left">
                         <div>
-                            <strong>Pakaian Bersih, Hati Tenang</strong>
-                            <small>Lebih praktis bersama ArsyClean</small>
+                            <div class="text-2xl sm:text-3xl font-black text-slate-900">24 Jam</div>
+                            <div class="text-xs font-semibold text-slate-500">Layanan Online</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl sm:text-3xl font-black text-blue-600">100%</div>
+                            <div class="text-xs font-semibold text-slate-500">Higienis &amp; Bersih</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl sm:text-3xl font-black text-emerald-600">QRIS</div>
+                            <div class="text-xs font-semibold text-slate-500">Bayar Praktis</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5">
+                    <div class="relative bg-gradient-to-tr from-blue-600 to-indigo-800 rounded-3xl p-8 sm:p-10 text-white shadow-2xl">
+                        <div class="text-xs font-bold text-sky-200 uppercase tracking-widest mb-2">Mengapa ArsyClean?</div>
+                        <h3 class="text-2xl font-black mb-6">Pilihan Solusi Laundry Lengkap</h3>
+
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-4 p-4 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10">
+                                <div class="text-2xl">🚚</div>
+                                <div>
+                                    <h4 class="font-bold text-sm">Pick Up &amp; Delivery</h4>
+                                    <p class="text-xs text-blue-100 mt-0.5">Kurir siap jemput dan antar kembali ke pintu rumah Anda.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4 p-4 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10">
+                                <div class="text-2xl">🧼</div>
+                                <div>
+                                    <h4 class="font-bold text-sm">Deterjen &amp; Pewangi Premium</h4>
+                                    <p class="text-xs text-blue-100 mt-0.5">Pakaian higienis, serat kain tetap awet, dan wangi tahan lama.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4 p-4 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10">
+                                <div class="text-2xl">📱</div>
+                                <div>
+                                    <h4 class="font-bold text-sm">Pelacakan Realtime</h4>
+                                    <p class="text-xs text-blue-100 mt-0.5">Cek status cucian step-by-step langsung dari gadget Anda.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- SERVICES -->
-        <section class="services" id="layanan">
-            <div class="container">
-                <div class="section-heading">
-                    <div class="section-label">Layanan Kami</div>
-                    <h2>Pilih Layanan Sesuai Kebutuhanmu</h2>
-                    <p>
-                        Tersedia beberapa pilihan layanan untuk membantu
-                        kebutuhan laundry sehari-hari.
-                    </p>
-                </div>
-
-                <div class="service-grid">
-
-                    <div class="service-card">
-                        <img
-                            src="https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=800"
-                            alt="Laundry reguler">
-
-                        <div class="service-body">
-                            <h3>Laundry Reguler</h3>
-                            <p>
-                                Antar pakaian langsung ke outlet dan pilih
-                                layanan pencucian sesuai kebutuhanmu.
-                            </p>
-                            <a href="{{ url('/login') }}" class="service-link">
-                                Pesan Layanan →
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="service-card">
-                        <img
-                            src="https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?w=800"
-                            alt="Laundry antar jemput">
-
-                        <div class="service-body">
-                            <h3>Laundry Antar-Jemput</h3>
-                            <p>
-                                Tidak sempat datang ke outlet? Pesan layanan
-                                penjemputan pakaian melalui sistem.
-                            </p>
-                            <a href="{{ url('/login') }}" class="service-link">
-                                Pesan Layanan →
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="service-card">
-                        <img
-                            src="https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=800"
-                            alt="Mesin laundry koin">
-
-                        <div class="service-body">
-                            <h3>Laundry Koin Digital</h3>
-                            <p>
-                                Gunakan mesin laundry secara mandiri dengan
-                                pembelian koin digital dan pemindaian QR Code.
-                            </p>
-                            <a href="{{ url('/login') }}" class="service-link">
-                                Lihat Layanan →
-                            </a>
-                        </div>
-                    </div>
-
-                </div>
+    <!-- Katalog Layanan Dirapikan -->
+    <section id="katalog" class="py-16 sm:py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-14">
+                <span class="text-xs font-black uppercase tracking-wider text-blue-600 block mb-2">Pilihan Paket Terbaik</span>
+                <h2 class="text-3xl sm:text-4xl font-black text-slate-900">Katalog Layanan ArsyClean</h2>
+                <p class="text-base text-slate-500 mt-2">
+                    Pilih paket layanan laundry sesuai dengan kebutuhan Anda. Tarif transparan tanpa biaya tersembunyi.
+                </p>
             </div>
-        </section>
 
-        <!-- ADVANTAGES -->
-        <section class="advantages" id="keunggulan">
-            <div class="container">
-                <div class="section-heading">
-                    <div class="section-label">Kenapa ArsyClean?</div>
-                    <h2>Laundry Lebih Praktis Setiap Hari</h2>
-                    <p>
-                        Kami menyediakan pilihan layanan yang dirancang
-                        untuk memudahkan aktivitas laundry pelanggan.
-                    </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Paket 1 -->
+                <div class="bg-slate-50 hover:bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 hover:border-blue-400 hover:shadow-xl transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl font-black mb-4">
+                            👕
+                        </div>
+                        <h3 class="text-lg font-black text-slate-900">Cuci Lipat Reguler</h3>
+                        <p class="text-xs text-slate-500 mt-1 mb-4">Layanan cuci bersih dan lipat rapi untuk pakaian sehari-hari.</p>
+
+                        <div class="mb-4">
+                            <span class="text-2xl font-black text-slate-900">Rp 7.000</span>
+                            <span class="text-xs text-slate-500 font-bold">/ kg</span>
+                        </div>
+
+                        <ul class="text-xs text-slate-600 space-y-2 mb-6">
+                            <li class="flex items-center gap-2"><span>✓</span> Durasi 2 Hari Kerja</li>
+                            <li class="flex items-center gap-2"><span>✓</span> Deterjen &amp; Pewangi Pilihan</li>
+                            <li class="flex items-center gap-2"><span>✓</span> Pengecekan Kualitas Standar</li>
+                        </ul>
+                    </div>
+
+                    <a href="{{ route('login') }}" class="w-full py-3 bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs rounded-xl text-center transition">
+                        Pesan Layanan
+                    </a>
                 </div>
 
-                <div class="advantage-grid">
-                    <div class="advantage-card">
-                        <div class="advantage-icon">⏱️</div>
-                        <h3>Hemat Waktu</h3>
-                        <p>
-                            Pilihan layanan yang membantu pelanggan
-                            mengatur waktu mencuci pakaian.
-                        </p>
+                <!-- Paket 2: Highlight -->
+                <div class="bg-blue-50/70 rounded-3xl p-6 sm:p-7 border-2 border-blue-500 shadow-xl flex flex-col justify-between relative">
+                    <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
+                        PALING POPULER
+                    </span>
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl font-black mb-4">
+                            🚚
+                        </div>
+                        <h3 class="text-lg font-black text-slate-900">Cuci Komplit + Pickup</h3>
+                        <p class="text-xs text-slate-600 mt-1 mb-4">Cuci, setrika uap rapi, dan fasilitas jemput-antar ke alamat Anda.</p>
+
+                        <div class="mb-4">
+                            <span class="text-2xl font-black text-blue-900">Rp 10.000</span>
+                            <span class="text-xs text-slate-600 font-bold">/ kg</span>
+                        </div>
+
+                        <ul class="text-xs text-slate-700 space-y-2 mb-6">
+                            <li class="flex items-center gap-2"><span>✓</span> Durasi 2 Hari Kerja</li>
+                            <li class="flex items-center gap-2"><span>✓</span> Termasuk Antar-Jemput Kurir</li>
+                            <li class="flex items-center gap-2"><span>✓</span> Setrika Uap Rapi &amp; Wangi</li>
+                        </ul>
                     </div>
 
-                    <div class="advantage-card">
-                        <div class="advantage-icon">📱</div>
-                        <h3>Pemesanan Mudah</h3>
-                        <p>
-                            Kelola pesanan dan pantau status laundry
-                            melalui sistem.
-                        </p>
-                    </div>
-
-                    <div class="advantage-card">
-                        <div class="advantage-icon">🚚</div>
-                        <h3>Layanan Antar-Jemput</h3>
-                        <p>
-                            Pakaian dapat dijemput dan diantarkan
-                            sesuai pesanan pelanggan.
-                        </p>
-                    </div>
-
-                    <div class="advantage-card">
-                        <div class="advantage-icon">🧺</div>
-                        <h3>Pilihan Beragam</h3>
-                        <p>
-                            Tersedia layanan reguler, antar-jemput,
-                            dan koin digital.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- HOW IT WORKS -->
-        <section id="cara-kerja">
-            <div class="container">
-                <div class="section-heading">
-                    <div class="section-label">Cara Menggunakan</div>
-                    <h2>Mulai Laundry dalam Beberapa Langkah</h2>
-                    <p>
-                        Proses penggunaan sistem ArsyClean dibuat sederhana
-                        agar pelanggan lebih mudah menggunakan layanan.
-                    </p>
+                    <a href="{{ route('login') }}" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl text-center shadow-md transition">
+                        Pesan Antar-Jemput
+                    </a>
                 </div>
 
-                <div class="steps-grid">
-                    <div class="step-card">
-                        <div class="step-number">01</div>
-                        <h3>Buat Akun</h3>
-                        <p>Daftar atau masuk ke akun ArsyClean.</p>
+                <!-- Paket 3 -->
+                <div class="bg-slate-50 hover:bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 hover:border-blue-400 hover:shadow-xl transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-2xl font-black mb-4">
+                            👔
+                        </div>
+                        <h3 class="text-lg font-black text-slate-900">Dry Clean Jas / Blazer</h3>
+                        <p class="text-xs text-slate-500 mt-1 mb-4">Perawatan profesional untuk pakaian formal, jas, dan gaun spesial.</p>
+
+                        <div class="mb-4">
+                            <span class="text-2xl font-black text-slate-900">Rp 25.000</span>
+                            <span class="text-xs text-slate-500 font-bold">/ pcs</span>
+                        </div>
+
+                        <ul class="text-xs text-slate-600 space-y-2 mb-6">
+                            <li class="flex items-center gap-2"><span>✓</span> Durasi 3 Hari Kerja</li>
+                            <li class="flex items-center gap-2"><span>✓</span> Perlindungan Serat Khusus</li>
+                            <li class="flex items-center gap-2"><span>✓</span> Hanger &amp; Cover Pelindung</li>
+                        </ul>
                     </div>
 
-                    <div class="step-card">
-                        <div class="step-number">02</div>
-                        <h3>Pilih Layanan</h3>
-                        <p>Pilih reguler, antar-jemput, atau koin digital.</p>
-                    </div>
-
-                    <div class="step-card">
-                        <div class="step-number">03</div>
-                        <h3>Lakukan Transaksi</h3>
-                        <p>Ikuti proses pemesanan dan pembayaran sesuai layanan.</p>
-                    </div>
-
-                    <div class="step-card">
-                        <div class="step-number">04</div>
-                        <h3>Nikmati Layanan</h3>
-                        <p>Pantau proses laundry atau penggunaan mesin.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ABOUT -->
-        <section class="about" id="tentang">
-            <div class="container about-content">
-                <div class="about-image">
-                    <img
-                        src="https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?w=1000"
-                        alt="Aktivitas laundry">
+                    <a href="{{ route('login') }}" class="w-full py-3 bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs rounded-xl text-center transition">
+                        Pesan Layanan
+                    </a>
                 </div>
 
-                <div class="about-text">
-                    <div class="section-label">Tentang ArsyClean</div>
+                <!-- Paket 4 -->
+                <div class="bg-slate-50 hover:bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 hover:border-blue-400 hover:shadow-xl transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-2xl font-black mb-4">
+                            🛏️
+                        </div>
+                        <h3 class="text-lg font-black text-slate-900">Bed Cover / Selimut</h3>
+                        <p class="text-xs text-slate-500 mt-1 mb-4">Pencucian kapasitas besar untuk selimut, bed cover tebal, dan sprei.</p>
 
-                    <h2>Lebih dari Sekadar Layanan Laundry</h2>
+                        <div class="mb-4">
+                            <span class="text-2xl font-black text-slate-900">Rp 30.000</span>
+                            <span class="text-xs text-slate-500 font-bold">/ pcs</span>
+                        </div>
 
-                    <p>
-                        ArsyClean Laundry merupakan layanan laundry yang
-                        menyediakan berbagai pilihan untuk memenuhi
-                        kebutuhan perawatan pakaian pelanggan.
-                    </p>
+                        <ul class="text-xs text-slate-600 space-y-2 mb-6">
+                            <li class="flex items-center gap-2"><span>✓</span> Durasi 2 Hari Kerja</li>
+                            <li class="flex items-center gap-2"><span>✓</span> Pengeringan Tuntas Higienis</li>
+                            <li class="flex items-center gap-2"><span>✓</span> Kemasan Rapi Bebas Debu</li>
+                        </ul>
+                    </div>
 
-                    <p>
-                        Melalui sistem informasi ArsyClean, pelanggan dapat
-                        memilih layanan, melakukan pemesanan, melihat status
-                        laundry, serta menggunakan fasilitas mesin koin digital.
-                    </p>
-
-                    <a href="{{ url('/login') }}" class="btn btn-primary">
-                        Kenali ArsyClean →
+                    <a href="{{ route('login') }}" class="w-full py-3 bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs rounded-xl text-center transition">
+                        Pesan Layanan
                     </a>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- CTA -->
-        <section class="cta">
-            <div class="container">
-                <div class="cta-box">
-                    <h2>Siap Membuat Urusan Laundry Lebih Mudah?</h2>
-                    <p>
-                        Mulai gunakan layanan ArsyClean dan pilih
-                        solusi laundry yang sesuai kebutuhanmu.
-                    </p>
-                    <a href="{{ url('/login') }}" class="btn">
-                        Mulai Sekarang →
-                    </a>
-                </div>
+    <!-- Alur Pemesanan 3 Langkah Mudah -->
+    <section id="cara-pesan" class="py-16 sm:py-20 bg-slate-50 border-y border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <span class="text-xs font-black uppercase tracking-wider text-blue-600 block mb-2">Alur Praktis</span>
+                <h2 class="text-3xl font-black text-slate-900">Cara Pesan Laundry di ArsyClean</h2>
+                <p class="text-sm text-slate-500 mt-2">Hanya 3 langkah mudah dari genggaman ponsel Anda.</p>
             </div>
-        </section>
 
-    </main>
-
-    <!-- FOOTER -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-
-                <div class="footer-brand">
-                    <h3>ArsyClean Laundry</h3>
-                    <p>
-                        Solusi layanan laundry yang praktis dengan
-                        pilihan layanan sesuai kebutuhan pelanggan.
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-7 rounded-3xl border border-slate-200 shadow-sm text-center space-y-3">
+                    <div class="w-14 h-14 mx-auto rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xl">
+                        1
+                    </div>
+                    <h3 class="font-black text-lg text-slate-900">Tentukan Jadwal &amp; Alamat</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Pilih jenis layanan, masukkan estimasi cucian, dan tentukan waktu penjemputan kurir.
                     </p>
                 </div>
 
-                <div class="footer-column">
-                    <h4>Navigasi</h4>
-                    <a href="#beranda">Beranda</a>
-                    <a href="#layanan">Layanan</a>
-                    <a href="#keunggulan">Keunggulan</a>
-                    <a href="#tentang">Tentang Kami</a>
+                <div class="bg-white p-7 rounded-3xl border border-slate-200 shadow-sm text-center space-y-3">
+                    <div class="w-14 h-14 mx-auto rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xl">
+                        2
+                    </div>
+                    <h3 class="font-black text-lg text-slate-900">Kurir Menjemput Cucian</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Kurir ArsyClean datang ke alamat Anda dan membawa cucian untuk diproses secara higienis.
+                    </p>
                 </div>
 
-                <div class="footer-column">
-                    <h4>Layanan</h4>
-                    <a href="#layanan">Laundry Reguler</a>
-                    <a href="#layanan">Laundry Antar-Jemput</a>
-                    <a href="#layanan">Laundry Koin Digital</a>
+                <div class="bg-white p-7 rounded-3xl border border-slate-200 shadow-sm text-center space-y-3">
+                    <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xl">
+                        3
+                    </div>
+                    <h3 class="font-black text-lg text-slate-900">Diantar Kembali Bersih Rapi</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Pakaian Anda diantar kembali dalam kondisi bersih sempurna, wangi, dan tertata rapi.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Kontak & Informasi -->
+    <footer id="kontak" class="bg-slate-900 text-slate-300 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-800">
+                <div class="space-y-3 md:col-span-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white text-lg">A</div>
+                        <span class="font-black text-xl text-white">ArsyClean Laundry</span>
+                    </div>
+                    <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
+                        Penyedia jasa laundry profesional terpercaya dengan sistem terintegrasi untuk kenyamanan pakaian sehari-hari dan kebutuhan bisnis Anda.
+                    </p>
                 </div>
 
+                <div class="space-y-2 text-xs">
+                    <div class="font-bold text-white uppercase tracking-wider text-sm mb-3">Tautan Cepat</div>
+                    <div><a href="#beranda" class="hover:text-white transition">Beranda</a></div>
+                    <div><a href="#katalog" class="hover:text-white transition">Katalog Layanan</a></div>
+                    <div><a href="{{ route('login') }}" class="hover:text-white transition">Masuk Akun</a></div>
+                    <div><a href="{{ route('register') }}" class="hover:text-white transition">Daftar Akun Baru</a></div>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                    <div class="font-bold text-white uppercase tracking-wider text-sm mb-3">Kontak &amp; Dukungan</div>
+                    <div>📞 WhatsApp: 0812-3456-7890</div>
+                    <div>📍 Jl. Raya Bandung Laundry No. 128</div>
+                    <div>🕒 Jam Layanan: 07:00 - 21:00 WIB</div>
+                    <div>💳 Pembayaran: QRIS &amp; Transfer Bank</div>
+                </div>
             </div>
 
-            <div class="footer-bottom">
-                © 2026 ArsyClean Laundry. All rights reserved.
+            <div class="pt-6 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span>&copy; {{ date('Y') }} <b>ArsyClean Laundry</b>. Hak Cipta Dilindungi Undang-Undang.</span>
+                <span>Laundry Bersih, Higienis &amp; Terpercaya</span>
             </div>
         </div>
     </footer>

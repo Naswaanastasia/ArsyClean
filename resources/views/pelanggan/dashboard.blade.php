@@ -1,317 +1,330 @@
-@extends('layouts.app')
-
-@section('title', 'Dashboard Pelanggan - Laravel ArsyClean')
+@extends('layouts.pelanggan')
+@section('title', 'Dashboard Pelanggan - ArsyClean Laundry')
 
 @section('content')
 
-    
+{{-- ===== POPUP HASIL PEMESANAN (SUKSES / GAGAL / QRIS) ===== --}}
 @if (session('success') || session('error'))
-    <div id="notificationModal"
-         class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4 overflow-y-auto">
-
-        <div class="w-full max-w-sm rounded-2xl bg-white p-7 text-center shadow-2xl my-6">
-
+    <div id="notificationModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+        <div class="w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl my-6 border border-slate-100">
             @if(session('qr_code_url'))
-                <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sky-100">
-                    <span class="text-3xl">📱</span>
+                <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100 text-3xl">
+                    📱
                 </div>
-
-                <h3 class="mb-2 text-xl font-bold text-slate-800">
+                <h3 class="text-xl font-black text-slate-800">
                     Pesanan Berhasil Dibuat!
                 </h3>
-
-                <p class="mb-4 text-sm text-slate-500">
-                    Silakan scan QRIS berikut untuk membayar.
+                <p class="text-xs text-slate-500 mt-1 mb-4">
+                    Silakan scan QRIS di bawah ini untuk menyelesaikan pembayaran.
                 </p>
 
-                <div class="rounded-xl border border-slate-200 p-3 mb-4">
+                <div class="rounded-2xl border-2 border-sky-100 bg-slate-50/50 p-4 mb-4">
                     <img src="{{ session('qr_code_url') }}"
-                         alt="QRIS Pembayaran"
-                         class="mx-auto w-full max-w-[240px]">
+                         alt="QRIS Pembayaran ArsyClean"
+                         class="mx-auto w-full max-w-[250px] rounded-xl shadow-xs border border-slate-200">
 
-                    <p class="mt-3 text-sm font-bold text-slate-800">
-                        Kode Pesanan
-                    </p>
+                    <div class="mt-3 text-xs font-semibold text-slate-500">Kode Pesanan:</div>
+                    <div class="text-base font-black text-blue-900 font-mono tracking-wider">#{{ session('kode_pesanan') }}</div>
 
-                    <p class="text-sm text-sky-600 font-mono">
-                        {{ session('kode_pesanan') }}
-                    </p>
+                    <div class="mt-2 text-xs text-slate-500">Total Tagihan:</div>
+                    <div class="text-2xl font-black text-slate-900">Rp {{ number_format(session('total_bayar'), 0, ',', '.') }}</div>
 
-                    <p class="mt-3 text-sm text-slate-500">
-                        Total Pembayaran
-                    </p>
-
-                    <p class="text-xl font-black text-slate-800">
-                        Rp{{ number_format(session('total_bayar'), 0, ',', '.') }}
-                    </p>
+                    <div class="mt-3 p-2.5 bg-blue-50/80 rounded-xl text-left text-xs text-blue-900">
+                        <div class="font-bold">💡 Alternatif Transfer Manual:</div>
+                        <div>BCA: <b>8735-1234-5678</b> a.n ArsyClean Laundry</div>
+                        <div>Mandiri: <b>1310-0987-6543</b> a.n ArsyClean Laundry</div>
+                    </div>
                 </div>
 
-                <p id="qrSessionStatus" class="mb-5 text-xs text-slate-500">
-                    Menunggu pembayaran... status akan diperbarui otomatis.
+                <p id="qrSessionStatus" class="mb-5 text-xs font-semibold text-slate-500">
+                    ⏳ Menunggu pembayaran... Status akan diperbarui secara otomatis.
                 </p>
             @else
-                <h3 class="mb-2 text-xl font-bold text-slate-800">
-                    {{ session('success') ? 'Pesanan Berhasil!' : 'Pesanan Gagal!' }}
+                <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl {{ session('success') ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600' }} text-2xl font-black">
+                    {{ session('success') ? '✓' : '!' }}
+                </div>
+                <h3 class="text-xl font-black text-slate-800">
+                    {{ session('success') ? 'Berhasil!' : 'Terjadi Kesalahan' }}
                 </h3>
-
-                <p class="mb-6 text-sm text-slate-500">
-                    {{ session('success') ? session('success') : session('error') }}
+                <p class="mt-2 mb-6 text-sm text-slate-600 leading-relaxed">
+                    {{ session('success') ?? session('error') }}
                 </p>
             @endif
 
             <button type="button"
                     onclick="hentikanCekPembayaran(); document.getElementById('notificationModal').remove()"
-                    class="w-full rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white hover:bg-sky-600">
-                Tutup
+                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-600/30 transition-all">
+                Tutup Jendela
             </button>
         </div>
     </div>
 @endif
 
-    <!-- Welcome Hero Banner -->
-    <div class="bg-gradient-to-r from-sky-500 to-blue-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="space-y-2">
-            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-white/20">
-                Selamat Datang, {{ Auth::user()->nama }}!
+<div class="space-y-7">
+
+    <!-- Header Sapaan & Call to Action -->
+    <div class="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="space-y-1.5">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-white/20 text-sky-200">
+                🧺 Layanan Laundry Online 24 Jam
             </span>
-
-            <h1 class="text-2xl sm:text-3xl font-black">
-                Layanan Laundry Praktis, Wangi & Bersih
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">
+                Halo, {{ $user->nama }}! 👋
             </h1>
-
-            <p class="text-xs text-sky-100 max-w-xl leading-relaxed">
-                Pesan layanan pick up laundry dengan mudah. Kurir kami siap menjemput cucian langsung ke rumahmu.
+            <p class="text-sm text-blue-100 max-w-xl leading-relaxed">
+                Pesan layanan pick up laundry antar jemput dengan cepat. Kurir ArsyClean siap menjemput cucian langsung ke rumah Anda.
             </p>
         </div>
 
-        <div class="w-24 h-24 rounded-2xl bg-white/20 p-2 shrink-0 hidden sm:block">
-            <img src="/src/assets/images/arsy_clean_mascot_1793340487175.jpg"
-                 alt="Mascot ArsyClean"
-                 class="w-full h-full object-cover rounded-xl">
-        </div>
+        <button type="button"
+                onclick="openOrderModal()"
+                class="shrink-0 bg-white hover:bg-blue-50 text-blue-900 font-extrabold text-sm px-6 py-3.5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2">
+            <span>+</span> Pesan Laundry Sekarang
+        </button>
     </div>
 
-    <!-- Active Laundry Progress Tracker -->
-    @if($activePesanan)
-        <div class="bg-white rounded-3xl p-6 border border-sky-200 shadow-sm">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+    <!-- Active Orders Tracking Cards -->
+    @if($activePesanans->isNotEmpty())
+        <div id="pesanan-aktif" class="scroll-mt-6 space-y-5">
+            <div class="flex items-center justify-between">
                 <div>
-                    <span class="text-[11px] font-bold text-sky-600 uppercase tracking-wider">
+                    <h2 class="text-lg sm:text-xl font-black text-slate-800 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-black">🔄</span>
                         Cucian Sedang Berlangsung
-                    </span>
-
-                    <h3 class="text-lg font-black text-slate-800">
-                        Pesanan #{{ $activePesanan->kode_pesanan }}
-                    </h3>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+                        Status realtime cucian yang sedang dikerjakan oleh tim ArsyClean.
+                    </p>
                 </div>
-
-                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-800">
-                    Status: {{ $activePesanan->status_laundry }}
-                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-800">
+                    {{ $activePesanans->count() }} Pesanan Aktif
+                </span>
             </div>
 
-            @php
-                $stages = [
-                    'Menunggu Antrean',
-                    'Pencucian',
-                    'Pengeringan',
-                    'Setrika',
-                    'Siap Diambil',
-                    'Dalam Pengiriman',
-                    'Selesai'
-                ];
+            @foreach($activePesanans as $ap)
+                @php
+                    $stages = $ap->daftarTahapLaundry();
+                    $currentIndex = array_search($ap->status_laundry, $stages);
+                    if ($currentIndex === false) { $currentIndex = 0; }
+                    $layananAp = $ap->layanan->first();
 
-                $currentIndex = array_search(
-                    $activePesanan->status_laundry,
-                    $stages
-                );
+                    $warnaTahap = [
+                        'Menunggu Antrean' => ['dot' => 'bg-amber-500',   'badge' => 'bg-amber-100 text-amber-800 border-amber-300'],
+                        'Pencucian'        => ['dot' => 'bg-sky-500',     'badge' => 'bg-sky-100 text-sky-800 border-sky-300'],
+                        'Pengeringan'      => ['dot' => 'bg-teal-500',    'badge' => 'bg-teal-100 text-teal-800 border-teal-300'],
+                        'Setrika'          => ['dot' => 'bg-purple-500',  'badge' => 'bg-purple-100 text-purple-800 border-purple-300'],
+                        'Siap Diambil'     => ['dot' => 'bg-emerald-500', 'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300'],
+                        'Siap Dikirim',
+                        'Dalam Pengiriman' => ['dot' => 'bg-orange-500',  'badge' => 'bg-orange-100 text-orange-800 border-orange-300'],
+                        'Selesai'          => ['dot' => 'bg-emerald-600', 'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300'],
+                    ];
+                    $currentWarna = $warnaTahap[$ap->status_laundry] ?? $warnaTahap['Menunggu Antrean'];
+                @endphp
 
-                if ($currentIndex === false) {
-                    $currentIndex = 0;
-                }
-            @endphp
-
-            <div class="grid grid-cols-4 sm:grid-cols-7 gap-3 text-center my-4">
-                @foreach($stages as $idx => $stage)
-                    <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mb-1
-                            {{ $idx <= $currentIndex ? 'bg-sky-500 text-white' : 'bg-slate-200 text-slate-400' }}">
-                            {{ $idx + 1 }}
+                <div id="card-pesanan-{{ $ap->kode_pesanan }}" class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-sm space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                        <div>
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono text-base font-black text-blue-900">#{{ $ap->kode_pesanan }}</span>
+                                <span class="px-3 py-0.5 rounded-full text-xs font-black border {{ $currentWarna['badge'] }}">
+                                    {{ $ap->status_laundry }}
+                                </span>
+                            </div>
+                            @if($layananAp)
+                                <p class="text-xs text-slate-500 mt-1">
+                                    {{ $layananAp->nama_layanan }} ({{ $layananAp->pivot->jumlah }} {{ $layananAp->satuan }}) &bull;
+                                    Total: <b>Rp {{ number_format($ap->total_harga, 0, ',', '.') }}</b>
+                                </p>
+                            @endif
                         </div>
 
-                        <span class="text-[10px]
-                            {{ $idx <= $currentIndex ? 'text-sky-600 font-bold' : 'text-slate-400' }}">
-                            {{ $stage }}
-                        </span>
+                        <div class="flex items-center gap-2">
+                            <button type="button"
+                                    onclick="bukaDetailPesanan('{{ $ap->id_pesanan }}')"
+                                    class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+                                🔍 Lihat Detail
+                            </button>
+                            <a href="{{ route('pelanggan.pesanan.nota', $ap->id_pesanan) }}"
+                               target="_blank"
+                               class="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition">
+                                🖨️ Cetak Nota
+                            </a>
+                        </div>
                     </div>
-                @endforeach
-            </div>
+
+                    <!-- Visual Timeline Tracker Sesuai Kode Pesanan -->
+                    <div class="overflow-x-auto py-2">
+                        <div class="flex items-center justify-between min-w-[550px] relative">
+                            <!-- Background line -->
+                            <div class="absolute top-4 left-6 right-6 h-1 bg-slate-200 -z-0"></div>
+
+                            @foreach($stages as $idx => $stg)
+                                @php
+                                    $isPassed = $idx <= $currentIndex;
+                                    $isCurrent = $idx === $currentIndex;
+                                @endphp
+                                <div class="relative z-10 flex flex-col items-center text-center flex-1">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all
+                                        {{ $isPassed ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-slate-200 text-slate-400' }}">
+                                        {{ $isPassed ? '✓' : ($idx + 1) }}
+                                    </div>
+                                    <span class="text-[11px] mt-2 font-bold max-w-[85px] leading-tight
+                                        {{ $isCurrent ? 'text-blue-700' : ($isPassed ? 'text-slate-800' : 'text-slate-400') }}">
+                                        {{ $stg }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @if($ap->pengiriman)
+                        <div class="p-3 bg-emerald-50/70 border border-emerald-200/60 rounded-xl text-xs text-emerald-900 flex items-center justify-between">
+                            <span>🚚 Kurir Penjemput/Pengantar: <b>{{ $ap->pengiriman->nama_kurir }}</b> ({{ $ap->pengiriman->no_hp_kurir }})</span>
+                            <span class="font-bold">Status: {{ $ap->pengiriman->status_pengiriman }}</span>
+                        </div>
+                    @endif
+                </div>
+            @endforeach
         </div>
     @endif
 
-    <!-- Katalog Pick Up Laundry -->
-    <div>
-        <div class="mb-5">
-            <h2 class="text-xl font-bold text-slate-800">
-                Katalog Layanan ArsyClean
-            </h2>
-
-            <p class="text-sm text-slate-500 mt-1">
-                Pilih layanan laundry sesuai kebutuhanmu.
-            </p>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <div class="flex items-center gap-4 mb-5">
-                <div class="w-14 h-14 rounded-2xl bg-sky-100 flex items-center justify-center text-2xl">
-                    🚚
-                </div>
-
-                <div>
-                    <h3 class="text-lg font-bold text-slate-800">
-                        Pesanan Pick Up Laundry
-                    </h3>
-
-                    <p class="text-xs text-slate-500 mt-1">
-                        Kurir ArsyClean siap menjemput cucian ke rumahmu.
-                    </p>
-                </div>
+    <!-- Banner Katalog Layanan Pick Up -->
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center text-3xl shrink-0">
+                🚚
             </div>
-
-            <button type="button"
-                    onclick="openOrderModal()"
-                    class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold text-sm py-3 rounded-xl transition">
-                Pesan Sekarang
-            </button>
+            <div>
+                <h3 class="text-lg sm:text-xl font-black text-slate-800">
+                    Layanan Pick Up &amp; Antar-Jemput Cucian
+                </h3>
+                <p class="text-sm text-slate-500 mt-0.5">
+                    Kurir kami siap menjemput cucian ke rumah Anda sesuai jadwal yang Anda pilih.
+                </p>
+            </div>
         </div>
+
+        <button type="button"
+                onclick="openOrderModal()"
+                class="shrink-0 px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm rounded-xl shadow-md shadow-blue-600/30 transition">
+            Buat Pesanan Baru &rarr;
+        </button>
     </div>
 
-    <!-- Riwayat Pesanan -->
-    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-        <h3 class="text-lg font-bold text-slate-800 mb-4">
-            Riwayat Pesanan Saya
-        </h3>
+    <!-- Riwayat Pesanan Saya (Read, Klik untuk Melihat Detail & Aksi) -->
+    <div id="riwayat" class="scroll-mt-6 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
+            <div>
+                <h3 class="text-lg sm:text-xl font-black text-slate-800 flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-black">📑</span>
+                    Riwayat Pesanan Saya
+                </h3>
+                <p class="text-sm text-slate-500 mt-1">
+                    Daftar seluruh pesanan Anda. Klik pada baris pesanan atau tombol detail untuk melihat rincian lengkap &amp; aksi.
+                </p>
+            </div>
+            <span class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 self-start sm:self-auto">
+                Total: {{ $pesanans->count() }} Pesanan
+            </span>
+        </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-xs text-left">
-                <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-200">
                     <tr>
-                        <th class="p-3">Kode</th>
-                        <th class="p-3">Tanggal</th>
-                        <th class="p-3">Layanan</th>
-                        <th class="p-3">Jumlah</th>
-                        <th class="p-3">Total</th>
-                        <th class="p-3">Status</th>
-                        <th class="p-3">Pembayaran</th>
-                        <th class="p-3">Aksi</th>
+                        <th class="p-3.5">Kode</th>
+                        <th class="p-3.5">Tanggal</th>
+                        <th class="p-3.5">Layanan</th>
+                        <th class="p-3.5">Jumlah</th>
+                        <th class="p-3.5">Total (Rp)</th>
+                        <th class="p-3.5">Status Laundry</th>
+                        <th class="p-3.5">Pembayaran</th>
+                        <th class="p-3.5 text-center">Aksi</th>
                     </tr>
                 </thead>
-
                 <tbody class="divide-y divide-slate-100">
                     @forelse($pesanans as $p)
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-3 font-mono font-bold text-slate-900">
-                                {{ $p->kode_pesanan }}
+                        @php
+                            $statusBayar = $p->pembayaran?->status_pembayaran ?? 'Pending';
+                            $layananItem = $p->layanan->first();
+                        @endphp
+                        <tr class="hover:bg-slate-50/80 cursor-pointer transition-colors" onclick="bukaDetailPesanan('{{ $p->id_pesanan }}')">
+                            <td class="p-3.5 font-mono font-bold text-blue-900">
+                                #{{ $p->kode_pesanan }}
                             </td>
-
-                            <td class="p-3 text-slate-600">
-                                {{ $p->tanggal_pesanan
-                                    ? $p->tanggal_pesanan->format('d M Y')
-                                    : '-' }}
+                            <td class="p-3.5 text-xs text-slate-500 font-medium">
+                                {{ $p->tanggal_pesanan ? $p->tanggal_pesanan->format('d M Y') : '-' }}
                             </td>
-
-                            <td class="p-3 text-slate-800">
-                                {{ $p->layanan->first()->nama_layanan ?? 'Layanan' }}
+                            <td class="p-3.5 font-bold text-slate-800">
+                                {{ $layananItem->nama_layanan ?? 'Layanan' }}
                             </td>
-
-                            <td class="p-3 text-slate-600">
-                                @if($p->layanan->first())
-                                    {{ $p->layanan->first()->pivot->jumlah }}
-                                    {{ $p->layanan->first()->satuan }}
+                            <td class="p-3.5 text-xs text-slate-600">
+                                @if($layananItem)
+                                    {{ $layananItem->pivot->jumlah }} {{ $layananItem->satuan }}
                                 @else
                                     -
                                 @endif
                             </td>
-
-                            <td class="p-3 font-bold text-slate-900">
+                            <td class="p-3.5 font-black text-slate-900">
                                 Rp {{ number_format($p->total_harga, 0, ',', '.') }}
                             </td>
-
-                            <td class="p-3">
-                                @php
-                                    $statusPesanan = $p->status_pesanan;
-                                    $warnaStatus = match ($statusPesanan) {
-                                        'Selesai'    => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                        'Dibatalkan' => 'bg-red-50 text-red-700 border-red-200',
-                                        'Diproses'   => 'bg-sky-50 text-sky-700 border-sky-200',
-                                        default      => 'bg-amber-50 text-amber-700 border-amber-200',
-                                    };
-                                @endphp
-
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $warnaStatus }}">
-                                    {{ $statusPesanan === 'Diproses' ? $p->status_laundry : $statusPesanan }}
-                                </span>
-
-                                @if($p->pengiriman)
-                                    <div class="mt-1 text-[10px] text-slate-500">
-                                        Kurir: {{ $p->pengiriman->nama_kurir }}
-                                        ({{ $p->pengiriman->status_pengiriman }})
-                                    </div>
-                                @endif
-                            </td>
-
-                            <td class="p-3">
-                                @php
-                                    $statusBayar = $p->pembayaran?->status_pembayaran ?? 'Pending';
-                                    $warnaBayar = match ($statusBayar) {
-                                        'Lunas'                => 'bg-emerald-100 text-emerald-800',
-                                        'Gagal', 'Dibatalkan'  => 'bg-red-100 text-red-800',
-                                        default                => 'bg-amber-100 text-amber-800',
-                                    };
-                                @endphp
-
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $warnaBayar }}">
-                                    {{ $statusBayar }} ({{ $p->metode_pembayaran }})
+                            <td class="p-3.5">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold
+                                    {{ $p->status_pesanan === 'Selesai' ? 'bg-emerald-100 text-emerald-800' : ($p->status_pesanan === 'Dibatalkan' ? 'bg-rose-100 text-rose-800' : 'bg-sky-100 text-sky-800') }}">
+                                    {{ $p->status_pesanan === 'Diproses' ? $p->status_laundry : $p->status_pesanan }}
                                 </span>
                             </td>
-
-                            <td class="p-3">
-                                @php
-                                    $bisaBayar = $p->status_pesanan === 'Menunggu Pembayaran'
-                                        && $statusBayar === 'Pending'
-                                        && !empty($p->pembayaran?->qr_code_url);
-                                @endphp
-
-                                @if($bisaBayar)
+                            <td class="p-3.5">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold
+                                    {{ $statusBayar === 'Lunas' ? 'bg-emerald-100 text-emerald-800' : ($statusBayar === 'Pending' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800') }}">
+                                    {{ $statusBayar }}
+                                </span>
+                            </td>
+                            <td class="p-3.5 text-center" onclick="event.stopPropagation()">
+                                <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                     <button type="button"
-                                            data-kode="{{ $p->kode_pesanan }}"
-                                            data-qr="{{ $p->pembayaran->qr_code_url }}"
-                                            data-total="{{ (int) round($p->total_harga) }}"
-                                            onclick="openQrModal(this)"
-                                            class="px-3 py-1.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-lg text-[11px]">
-                                        Bayar
+                                            onclick="bukaDetailPesanan('{{ $p->id_pesanan }}')"
+                                            class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
+                                        Detail
                                     </button>
-                                @elseif($p->ulasan)
-                                    <span class="text-amber-500 font-bold">
-                                        {{ str_repeat('★', (int) $p->ulasan->rating) }}{{ str_repeat('☆', 5 - (int) $p->ulasan->rating) }}
-                                    </span>
-                                @elseif($p->status_pesanan === 'Selesai')
-                                    <button type="button"
-                                            data-id="{{ $p->id_pesanan }}"
-                                            data-kode="{{ $p->kode_pesanan }}"
-                                            onclick="openReviewModal(this)"
-                                            class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-[11px]">
-                                        Beri Ulasan
-                                    </button>
-                                @else
-                                    <span class="text-slate-300">-</span>
-                                @endif
+
+                                    <a href="{{ route('pelanggan.pesanan.nota', $p->id_pesanan) }}"
+                                       target="_blank"
+                                       title="Cetak Struk / Nota PDF Kapan Saja"
+                                       class="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition">
+                                        🖨️ PDF
+                                    </a>
+
+                                    @if($p->status_pesanan === 'Menunggu Pembayaran' && $statusBayar === 'Pending')
+                                        <button type="button"
+                                                data-kode="{{ $p->kode_pesanan }}"
+                                                data-qr="{{ $p->pembayaran?->qr_code_url ?? route('pelanggan.qris.manual', $p->kode_pesanan) }}"
+                                                data-total="{{ (int) round($p->total_harga) }}"
+                                                data-id="{{ $p->id_pesanan }}"
+                                                onclick="openQrModal(this)"
+                                                class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold shadow-xs transition">
+                                            Bayar
+                                        </button>
+                                    @elseif($p->ulasan)
+                                        <span class="text-amber-500 font-bold text-xs" title="Rating: {{ $p->ulasan->rating }} Bintang">
+                                            {{ str_repeat('★', (int) $p->ulasan->rating) }}
+                                        </span>
+                                    @elseif($p->status_pesanan === 'Selesai')
+                                        <button type="button"
+                                                data-id="{{ $p->id_pesanan }}"
+                                                data-kode="{{ $p->kode_pesanan }}"
+                                                onclick="openReviewModal(this)"
+                                                class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition">
+                                            Ulasan
+                                        </button>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="p-4 text-center text-slate-400">
-                                Belum ada riwayat pesanan.
+                            <td colspan="8" class="p-8 text-center text-slate-400">
+                                Belum ada riwayat pesanan laundry. Silakan klik "Pesan Laundry Sekarang" untuk mulai.
                             </td>
                         </tr>
                     @endforelse
@@ -322,734 +335,543 @@
 
 </div>
 
-<!-- Modal Pemesanan Pick Up Laundry -->
-<div id="orderModal"
-     class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-
-        <div class="flex justify-between items-start mb-4">
+{{-- ================= MODAL PEMESANAN PICK UP LAUNDRY ================= --}}
+<div id="orderModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto space-y-5">
+        <div class="flex justify-between items-start pb-3 border-b border-slate-100">
             <div>
-                <h3 class="text-lg font-bold text-slate-800">
-                    Pesanan Pick Up Laundry
-                </h3>
-
-                <p class="text-xs text-slate-500 mt-1">
-                    Lengkapi detail cucian yang ingin dijemput.
-                </p>
+                <h3 class="text-xl font-black text-slate-800">Pemesanan Pick Up Laundry</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lengkapi data cucian dan jadwal penjemputan ke rumah Anda.</p>
             </div>
-
-            <button type="button"
-                    onclick="closeOrderModal()"
-                    class="text-slate-400 hover:text-slate-700 text-xl">
-                ✕
-            </button>
+            <button type="button" onclick="closeOrderModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">✕</button>
         </div>
 
-        <form action="{{ route('pelanggan.pesanan.store') }}"
-        method="POST"
-        id="orderForm"
-        novalidate
-        class="space-y-4 text-sm">
+        <form action="{{ route('pelanggan.pesanan.store') }}" method="POST" id="orderForm" class="space-y-4 text-sm">
             @csrf
 
-            <!-- Pilihan Layanan -->
+            <!-- 1. Pilihan Layanan (1 Layanan = 1 Kode Pesanan) -->
             <div>
-                <label class="block font-semibold text-slate-700 mb-2">
-                    Jenis Layanan
+                <label class="block font-bold text-slate-700 mb-1.5">
+                    Pilihan Jenis Layanan <span class="text-red-500 font-bold">*</span>
                 </label>
-
                 <select name="id_layanan"
                         id="serviceSelect"
                         required
                         onchange="changeService()"
-                        class="w-full border border-slate-200 rounded-xl px-3 py-3 bg-slate-50 focus:ring-2 focus:ring-sky-400 outline-none">
-
-                    <option value="">Pilih jenis layanan</option>
-
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 text-sm font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">-- Pilih Jenis Layanan Laundry --</option>
                     @foreach([
-                        'L001' => 'Cuci Kering Reguler',
-                        'L004' => 'Cuci Komplit + Antar Jemput',
-                        'L005' => 'Dry Clean Jas / Blazer',
-                        'L006' => 'Cuci Bed Cover / Selimut Besar'
+                        'L001' => 'Cuci Kering Reguler (Kiloan)',
+                        'L004' => 'Cuci Komplit + Antar Jemput (Kiloan)',
+                        'L005' => 'Dry Clean Jas / Blazer (Satuan)',
+                        'L006' => 'Cuci Bed Cover / Selimut Besar (Satuan)'
                     ] as $kode => $nama)
-
                         @php
                             $layanan = $layanans->firstWhere('kode_layanan', $kode);
                         @endphp
-
                         @if($layanan)
                             <option value="{{ $layanan->id_layanan }}"
                                     data-kode="{{ $kode }}"
                                     data-nama="{{ $nama }}"
                                     data-harga="{{ $layanan->harga }}"
-                                    data-satuan="{{ $layanan->satuan }}">
-                                {{ $nama }} -
-                                Rp{{ number_format($layanan->harga, 0, ',', '.') }}/{{ $layanan->satuan }}
+                                    data-satuan="{{ $layanan->satuan }}"
+                                    data-durasi="{{ $layanan->durasi }}">
+                                {{ $nama }} &bull; Rp {{ number_format($layanan->harga, 0, ',', '.') }}/{{ $layanan->satuan }} ({{ $layanan->durasi }})
                             </option>
                         @endif
                     @endforeach
                 </select>
             </div>
 
-            <!-- Bagian Pakaian Kiloan -->
-            <div id="kiloanSection" class="hidden space-y-3">
-
-                <div>
-                    <h4 class="font-bold text-slate-800">
-                        Detail Jenis Pakaian
-                    </h4>
-
-                    <p class="text-xs text-slate-500 mt-1">
-                        Masukkan jumlah setiap jenis pakaian dalam satuan pcs.
-                        Berat yang ditampilkan merupakan estimasi.
-                    </p>
+            <!-- 2. Rincian Pakaian / Berat (Kiloan) -->
+            <div id="clothingEstimator" class="hidden space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                <div class="flex items-center justify-between">
+                    <label class="font-bold text-xs text-slate-700 uppercase">
+                        Estimasi Pakaian Cucian <span class="text-red-500 font-bold">*</span>
+                    </label>
+                    <span class="text-[11px] text-blue-600 font-bold">Otomatis dihitung ke kg</span>
                 </div>
-
-                <div id="clothingList" class="space-y-3">
-
-                    @php
-                        $clothingTypes = [
-                            ['key' => 'kaos', 'name' => 'Kaos', 'weight' => 100],
-                            ['key' => 'kemeja', 'name' => 'Kemeja', 'weight' => 111],
-                            ['key' => 'celana_bahan', 'name' => 'Celana Bahan', 'weight' => 167],
-                            ['key' => 'celana_jeans', 'name' => 'Celana Jeans', 'weight' => 250],
-                            ['key' => 'celana_pendek', 'name' => 'Celana Pendek', 'weight' => 118],
-                            ['key' => 'jaket_tipis', 'name' => 'Jaket Tipis', 'weight' => 333],
-                            ['key' => 'jaket_tebal', 'name' => 'Jaket Tebal', 'weight' => 400],
-                            ['key' => 'hoodie', 'name' => 'Hoodie', 'weight' => 400],
-                            ['key' => 'sweater', 'name' => 'Sweater', 'weight' => 250],
-                            ['key' => 'rok_tipis', 'name' => 'Rok Tipis', 'weight' => 154],
-                            ['key' => 'rok_tebal', 'name' => 'Rok Tebal', 'weight' => 250],
-                            ['key' => 'pakaian_anak', 'name' => 'Pakaian Anak-anak', 'weight' => 63],
-                            ['key' => 'pakaian_dalam', 'name' => 'Pakaian Dalam', 'weight' => 50],
-                            ['key' => 'handuk_kecil', 'name' => 'Handuk Kecil', 'weight' => 154],
-                            ['key' => 'handuk_besar', 'name' => 'Handuk Besar', 'weight' => 333],
-                            ['key' => 'baju_tidur', 'name' => 'Baju Tidur', 'weight' => 154],
-                        ];
-                    @endphp
-
-                    @foreach($clothingTypes as $item)
-                        <div class="flex items-center justify-between gap-3 border border-slate-200 rounded-xl p-3">
-                            <div>
-                                <p class="text-xs font-semibold text-slate-700">
-                                    {{ $item['name'] }}
-                                </p>
-
-                                <p class="text-[10px] text-slate-400">
-                                    ± {{ $item['weight'] }} gram/pcs
-                                </p>
-                            </div>
-
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs max-h-48 overflow-y-auto pr-1">
+                    @foreach([
+                        'kaos'          => 'Kaos / T-Shirt',
+                        'kemeja'        => 'Kemeja',
+                        'celana_bahan'  => 'Celana Bahan',
+                        'celana_jeans'  => 'Celana Jeans',
+                        'celana_pendek' => 'Celana Pendek',
+                        'jaket_tipis'   => 'Jaket Tipis',
+                        'jaket_tebal'   => 'Jaket Tebal / Hoodie',
+                        'rok_tipis'     => 'Rok / Dress',
+                        'handuk_besar'  => 'Handuk Mandi',
+                        'baju_tidur'    => 'Piyama / Baju Tidur'
+                    ] as $key => $label)
+                        <div class="bg-white p-2 rounded-xl border border-slate-200">
+                            <span class="block text-[11px] font-bold text-slate-700 truncate">{{ $label }}</span>
                             <input type="number"
-                                   name="pakaian[{{ $item['key'] }}]"
                                    min="0"
-                                   step="1"
-                                   value="0"
-                                   data-weight="{{ $item['weight'] }}"
-                                   data-name="{{ $item['name'] }}"
-                                   class="clothing-quantity w-20 border border-slate-200 rounded-lg px-2 py-2 text-center text-sm"
-                                   oninput="calculateOrder()">
+                                   name="pakaian[{{ $key }}]"
+                                   placeholder="0"
+                                   class="clothing-input w-full mt-1 px-2 py-1 bg-slate-50 border rounded-lg text-xs font-bold text-slate-800"
+                                   oninput="calculateTotal()">
                         </div>
                     @endforeach
-
                 </div>
             </div>
 
-            <!-- Bagian Laundry Satuan -->
-            <div id="satuanSection" class="hidden space-y-3">
+            <!-- Rincian Satuan (L005 / L006) -->
+            <div id="unitSection" class="hidden space-y-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                <label class="block font-bold text-xs text-slate-700 uppercase">
+                    Jumlah Barang (Pcs) <span class="text-red-500 font-bold">*</span>
+                </label>
+                <input type="number"
+                       id="satuanQuantity"
+                       min="1"
+                       value="1"
+                       class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold"
+                       oninput="calculateTotal()">
+            </div>
 
+            <input type="hidden" name="jumlah" id="jumlahInput">
+
+            <!-- 3. Jadwal & Waktu Penjemputan -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <h4 class="font-bold text-slate-800">
-                        Detail Barang
-                    </h4>
-
-                    <p id="satuanDescription" class="text-xs text-slate-500 mt-1">
-                        Masukkan jumlah barang yang akan dicuci.
-                    </p>
-                </div>
-
-                <div>
-                    <label id="satuanItemLabel"
-                           class="block font-semibold text-slate-700 mb-2">
-                        Jumlah barang (pcs)
+                    <label class="block font-bold text-xs text-slate-700 mb-1">
+                        Tanggal Penjemputan <span class="text-red-500 font-bold">*</span>
                     </label>
-
-                    <input type="number"
-                           id="satuanQuantity"
-                           min="1"
-                           step="1"
-                           value="1"
-                           oninput="calculateOrder()"
-                           class="w-full border border-slate-200 rounded-xl px-3 py-3 bg-slate-50">
-                </div>
-            </div>
-
-            <!-- Jumlah yang dikirim ke Controller -->
-            <input type="hidden"
-                   name="jumlah"
-                   id="jumlahInput"
-                   value="">
-
-            <!-- Ringkasan Harga -->
-            <div id="priceSummary"
-                 class="hidden bg-sky-50 border border-sky-100 rounded-2xl p-4 space-y-2">
-
-                <h4 class="font-bold text-slate-800 mb-2">
-                    Ringkasan Pesanan
-                </h4>
-
-                <div class="flex justify-between text-xs">
-                    <span class="text-slate-500">Jenis layanan</span>
-                    <span id="summaryService" class="font-semibold text-slate-700">-</span>
-                </div>
-
-                <div class="flex justify-between text-xs">
-                    <span class="text-slate-500">Jumlah pakaian/barang</span>
-                    <span id="summaryQuantity" class="font-semibold text-slate-700">0 pcs</span>
-                </div>
-
-                <div id="weightSummary" class="flex justify-between text-xs">
-                    <span class="text-slate-500">Estimasi berat</span>
-                    <span id="summaryWeight" class="font-semibold text-slate-700">0 kg</span>
-                </div>
-
-                <div class="flex justify-between text-xs">
-                    <span class="text-slate-500">Tarif layanan</span>
-                    <span id="summaryRate" class="font-semibold text-slate-700">Rp0</span>
-                </div>
-
-                <div class="border-t border-sky-200 pt-3 flex justify-between items-center">
-                    <span class="font-bold text-slate-800">Total Harga</span>
-                    <span id="summaryTotal" class="text-lg font-black text-sky-600">Rp0</span>
-                </div>
-            </div>
-
-            <!-- Tanggal dan Waktu -->
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-2">
-                        Tanggal Penjemputan
-                    </label>
-
                     <input type="date"
                            name="tanggal"
                            min="{{ date('Y-m-d') }}"
                            value="{{ date('Y-m-d') }}"
                            required
-                           class="w-full border border-slate-200 rounded-xl px-3 py-3 bg-slate-50 text-xs">
+                           class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold">
                 </div>
-
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-2">
-                        Waktu Penjemputan
+                    <label class="block font-bold text-xs text-slate-700 mb-1">
+                        Jam Penjemputan <span class="text-red-500 font-bold">*</span>
                     </label>
-
                     <input type="time"
                            name="waktu"
                            value="09:00"
                            required
-                           class="w-full border border-slate-200 rounded-xl px-3 py-3 bg-slate-50 text-xs">
+                           class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold">
                 </div>
             </div>
 
-            
-<!-- Metode Pembayaran -->
-<div>
-    <label class="block font-semibold text-slate-700 mb-2">
-        Metode Pembayaran
-    </label>
-
-    <div class="w-full border border-sky-200 rounded-xl px-4 py-3 bg-sky-50">
-        <div class="flex items-center gap-3">
-            <input type="hidden" name="metode_pembayaran" value="QRIS">
-
-            <span class="text-2xl">📱</span>
-
+            <!-- 4. Alamat Penjemputan -->
             <div>
-                <p class="font-bold text-slate-800">QRIS</p>
-                <p class="text-xs text-slate-500">
-                    Bayar menggunakan aplikasi mobile banking atau e-wallet.
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
-
-                
-            <!-- Alamat -->
-            <div>
-                <label class="block font-semibold text-slate-700 mb-2">
-                    Alamat Penjemputan
+                <label class="block font-bold text-xs text-slate-700 mb-1">
+                    Alamat Lengkap Penjemputan <span class="text-red-500 font-bold">*</span>
                 </label>
-
                 <textarea name="alamat"
-                          rows="3"
-                          required
-                          class="w-full border border-slate-200 rounded-xl px-3 py-3 bg-slate-50">{{ Auth::user()->alamat }}</textarea>
-            </div>
-
-            <!-- Catatan -->
-            <div>
-                <label class="block font-semibold text-slate-700 mb-2">
-                    Catatan (Opsional)
-                </label>
-
-                <textarea name="catatan"
-                          id="customerNote"
                           rows="2"
-                          class="w-full border border-slate-200 rounded-xl px-3 py-3 bg-slate-50"
-                          placeholder="Tambahkan catatan untuk kurir atau laundry..."></textarea>
+                          required
+                          placeholder="Nama jalan, nomor rumah, RT/RW, patokan..."
+                          class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white">{{ $user->alamat }}</textarea>
             </div>
 
-            <!-- Tombol -->
-            <div class="flex gap-2 pt-2">
-                <button type="button"
-                        onclick="closeOrderModal()"
-                        class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">
+            <!-- 5. Catatan Khusus Pelanggan -->
+            <div>
+                <label class="block font-bold text-xs text-slate-700 mb-1">
+                    Catatan Tambahan untuk Admin &amp; Kurir
+                </label>
+                <textarea name="catatan"
+                          rows="2"
+                          placeholder="Contoh: Pisahkan pakaian putih, jemput setelah jam makan siang..."
+                          class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white"></textarea>
+            </div>
+
+            <!-- 6. Metode Pembayaran & QRIS Manual Fallback -->
+            <div>
+                <label class="block font-bold text-xs text-slate-700 mb-1.5">
+                    Metode Pembayaran <span class="text-red-500 font-bold">*</span>
+                </label>
+                <div class="grid grid-cols-2 gap-2.5 text-xs">
+                    <label class="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-blue-50/50">
+                        <input type="radio" name="metode_pembayaran" value="QRIS" checked class="accent-blue-600">
+                        <div>
+                            <span class="font-bold text-slate-800 block">QRIS Otomatis / Manual</span>
+                            <span class="text-[10px] text-slate-400">Scan QRIS BCA/GoPay/OVO</span>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-blue-50/50">
+                        <input type="radio" name="metode_pembayaran" value="TUNAI" class="accent-blue-600">
+                        <div>
+                            <span class="font-bold text-slate-800 block">Bayar Tunai</span>
+                            <span class="text-[10px] text-slate-400">Bayar saat kurir datang</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Total Harga Estimasi -->
+            <div id="priceSummary" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-blue-700 font-bold block" id="summaryService">Layanan Laundry</span>
+                    <span class="text-xs text-slate-600" id="summaryDetails">0 kg &bull; Rp 0</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-400 block font-semibold">Total Pembayaran</span>
+                    <span class="text-xl font-black text-blue-900" id="summaryTotal">Rp 0</span>
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="closeOrderModal()" class="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm">
                     Batal
                 </button>
-
-                <button type="submit"
-                        id="submitOrderButton"
-                        class="flex-1 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl">
-                    Konfirmasi Pesanan
+                <button type="submit" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md shadow-blue-600/30">
+                    Konfirmasi &amp; Lanjutkan &rarr;
                 </button>
             </div>
-
         </form>
     </div>
 </div>
-<!-- Modal QR Pembayaran (untuk melanjutkan pembayaran yang tertunda) -->
-<div id="qrModal"
-     class="hidden fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
 
-    <div class="bg-white rounded-3xl max-w-sm w-full p-7 text-center shadow-2xl max-h-[90vh] overflow-y-auto">
-        <h3 class="mb-1 text-xl font-bold text-slate-800">Bayar Pesanan</h3>
-        <p class="mb-4 text-sm text-slate-500">Scan QRIS berikut untuk membayar.</p>
-
-        <div class="rounded-xl border border-slate-200 p-3 mb-4">
-            <img id="qrModalImage" src="" alt="QRIS Pembayaran" class="mx-auto w-full max-w-[240px]">
-
-            <p class="mt-3 text-sm font-bold text-slate-800">Kode Pesanan</p>
-            <p id="qrModalKode" class="text-sm text-sky-600 font-mono"></p>
-
-            <p class="mt-3 text-sm text-slate-500">Total Pembayaran</p>
-            <p id="qrModalTotal" class="text-xl font-black text-slate-800"></p>
+{{-- ================= MODAL DETAIL PESANAN INTERAKTIF ================= --}}
+<div id="detailModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+                <h3 class="text-lg font-black text-slate-800">Detail Pesanan #<span id="detailKode"></span></h3>
+                <span class="text-xs text-slate-400" id="detailTanggal">-</span>
+            </div>
+            <button type="button" onclick="closeDetailModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">✕</button>
         </div>
 
-        <p id="qrModalStatus" class="mb-5 text-xs text-slate-500">
-            Menunggu pembayaran... status akan diperbarui otomatis.
+        <div id="detailLoading" class="py-10 text-center text-slate-400">Memuat rincian pesanan...</div>
+
+        <div id="detailContent" class="hidden space-y-4 text-xs">
+            <!-- Status Badge & Tracker -->
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
+                <div>
+                    <span class="text-[11px] text-slate-400 block">Status Pengerjaan</span>
+                    <span class="text-sm font-black text-blue-900" id="detailStatusLaundry">-</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-[11px] text-slate-400 block">Pembayaran</span>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold" id="detailStatusBayar">-</span>
+                </div>
+            </div>
+
+            <!-- Rincian Layanan -->
+            <div>
+                <h4 class="font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-1.5">Rincian Layanan:</h4>
+                <div id="detailLayananList" class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1"></div>
+            </div>
+
+            <!-- Catatan Pelanggan -->
+            <div>
+                <h4 class="font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-1">Catatan Pesanan:</h4>
+                <p id="detailCatatan" class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-700 whitespace-pre-line">-</p>
+            </div>
+
+            <!-- Alamat Penjemputan -->
+            <div>
+                <h4 class="font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-1">Alamat Penjemputan:</h4>
+                <p id="detailAlamat" class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-700">-</p>
+            </div>
+
+            <!-- Info Kurir -->
+            <div id="detailKurirBox" class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900">
+                <div class="font-bold">🚚 Penugasan Kurir:</div>
+                <div id="detailKurirInfo" class="mt-0.5"></div>
+            </div>
+
+            <!-- Form Upload Bukti Transfer Manual (Jika Pending) -->
+            <div id="detailUploadSection" class="hidden p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+                <div class="font-bold text-amber-900 text-xs">Unggah Bukti Transfer Manual:</div>
+                <p class="text-[11px] text-amber-700">Jika Anda membayar melalui transfer bank atau QRIS manual, silakan unggah foto bukti transfer di sini.</p>
+                <form id="detailUploadForm" method="POST" enctype="multipart/form-data" class="space-y-2">
+                    @csrf
+                    <input type="file" name="bukti_transfer" accept="image/*" required class="w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-600 file:text-white">
+                    <button type="submit" class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs">
+                        Kirim Bukti Transfer
+                    </button>
+                </form>
+            </div>
+
+            <!-- Total & Action Buttons -->
+            <div class="pt-2 flex items-center justify-between border-t border-slate-100">
+                <div>
+                    <span class="text-[11px] text-slate-400 block font-semibold">Total Tagihan</span>
+                    <span class="text-xl font-black text-slate-900" id="detailTotal">Rp 0</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a id="detailNotaBtn" href="#" target="_blank" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <span>🖨️</span> Cetak Nota PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ================= MODAL QR CODE PEMBAYARAN ================= --}}
+<div id="qrModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <h3 class="text-base font-black text-slate-800">Scan QRIS Pembayaran</h3>
+            <button type="button" onclick="closeQrModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+            <img id="qrModalImage" src="" alt="QR Code" class="mx-auto w-full max-w-[240px] rounded-xl shadow-xs border border-slate-200">
+            <div class="mt-2 text-xs text-slate-400">Kode Pesanan:</div>
+            <div id="qrModalKode" class="font-mono font-black text-blue-900 text-sm"></div>
+            <div class="mt-1 text-xs text-slate-400">Total Nominal:</div>
+            <div id="qrModalTotal" class="font-black text-slate-900 text-xl"></div>
+        </div>
+
+        <div class="p-2.5 bg-blue-50/80 rounded-xl text-left text-xs text-blue-900">
+            <div class="font-bold">💡 Opsi Transfer Bank Manual:</div>
+            <div>BCA: <b>8735-1234-5678</b></div>
+            <div>Mandiri: <b>1310-0987-6543</b></div>
+        </div>
+
+        <p id="qrModalStatus" class="text-xs font-semibold text-slate-500">
+            ⏳ Menunggu pembayaran... Status akan otomatis diperbarui setelah dibayar.
         </p>
 
-        <button type="button"
-                onclick="closeQrModal()"
-                class="w-full rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white hover:bg-sky-600">
+        <button type="button" onclick="closeQrModal()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
             Tutup
         </button>
     </div>
 </div>
 
-<!-- Modal Ulasan -->
-<div id="reviewModal"
-     class="hidden fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+{{-- ================= MODAL ULASAN BINTANG ================= --}}
+<div id="reviewModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+        <h3 class="text-lg font-black text-slate-800">Beri Ulasan Layanan</h3>
+        <p class="text-xs text-slate-500">Bagikan pengalaman Anda menggunakan jasa laundry ArsyClean.</p>
 
-    <div class="bg-white rounded-3xl max-w-sm w-full p-7 shadow-2xl">
-        <h3 class="text-xl font-bold text-slate-800 text-center mb-1">Beri Ulasan</h3>
-        <p id="reviewKode" class="text-center text-xs text-slate-500 mb-4 font-mono"></p>
-
-        <form id="reviewForm" method="POST" action="" class="space-y-4 text-sm">
+        <form id="reviewForm" method="POST" class="space-y-4">
             @csrf
-            <input type="hidden" name="rating" id="reviewRating" value="">
+            <input type="hidden" name="rating" id="reviewRating" required>
 
-            <div id="reviewStars" class="flex justify-center gap-1">
+            <div class="flex justify-center gap-2 text-3xl" id="reviewStars">
                 @for($i = 1; $i <= 5; $i++)
-                    <button type="button"
-                            data-star="{{ $i }}"
-                            onclick="setRating({{ $i }})"
-                            class="text-4xl text-slate-300 transition">★</button>
+                    <button type="button" data-star="{{ $i }}" onclick="setRating({{ $i }})" class="text-slate-300 hover:text-amber-400 transition-colors">
+                        ★
+                    </button>
                 @endfor
             </div>
 
-            <p id="reviewError" class="hidden text-center text-xs text-red-600">
-                Pilih rating bintang 1 sampai 5.
-            </p>
+            <textarea name="komentar" rows="3" placeholder="Tuliskan ulasan atau saran Anda (opsional)..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"></textarea>
 
-            <textarea name="komentar"
-                      rows="3"
-                      placeholder="Ceritakan pengalamanmu (opsional)"
-                      class="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:ring-2 focus:ring-sky-400 outline-none"></textarea>
-
-            <div class="flex gap-3">
-                <button type="button"
-                        onclick="closeReviewModal()"
-                        class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">
-                    Batal
-                </button>
-
-                <button type="submit"
-                        class="flex-1 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl">
-                    Kirim
-                </button>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeReviewModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">Batal</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-md">Kirim Ulasan</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal Peringatan Validasi -->
-<div id="alertModal"
-     class="hidden fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-
-    <div class="bg-white rounded-3xl max-w-sm w-full p-7 text-center shadow-2xl">
-        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
-            <span class="text-3xl">⚠️</span>
-        </div>
-
-        <h3 id="alertTitle" class="mb-2 text-xl font-bold text-slate-800">
-            Perhatian
-        </h3>
-
-        <p id="alertMessage" class="mb-6 text-sm text-slate-500"></p>
-
-        <button type="button"
-                onclick="closeAlert()"
-                class="w-full rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white hover:bg-sky-600">
-            Mengerti
-        </button>
-    </div>
-</div>
-
+@push('scripts')
 <script>
-    const clothingInputs = document.querySelectorAll('.clothing-quantity');
+    const clothesWeights = {
+        kaos: 100, kemeja: 111, celana_bahan: 167, celana_jeans: 250,
+        celana_pendek: 118, jaket_tipis: 333, jaket_tebal: 400,
+        rok_tipis: 154, handuk_besar: 333, baju_tidur: 154
+    };
 
     function openOrderModal() {
         document.getElementById('orderModal').classList.remove('hidden');
     }
-function showAlert(message, title = 'Perhatian') {
-    document.getElementById('alertTitle').innerText = title;
-    document.getElementById('alertMessage').innerText = message;
-    document.getElementById('alertModal').classList.remove('hidden');
-}
-
-function closeAlert() {
-    document.getElementById('alertModal').classList.add('hidden');
-}
     function closeOrderModal() {
         document.getElementById('orderModal').classList.add('hidden');
     }
 
     function changeService() {
         const select = document.getElementById('serviceSelect');
-        const option = select.options[select.selectedIndex];
+        const selected = select.options[select.selectedIndex];
+        const kode = selected?.dataset?.kode;
 
-        const kiloanSection = document.getElementById('kiloanSection');
-        const satuanSection = document.getElementById('satuanSection');
-        const priceSummary = document.getElementById('priceSummary');
-
-        kiloanSection.classList.add('hidden');
-        satuanSection.classList.add('hidden');
-        priceSummary.classList.add('hidden');
-
-        document.getElementById('jumlahInput').value = '';
-
-        if (!select.value) {
-            return;
-        }
-
-        const kode = option.dataset.kode;
+        const clothingSec = document.getElementById('clothingEstimator');
+        const unitSec = document.getElementById('unitSection');
 
         if (kode === 'L001' || kode === 'L004') {
-            kiloanSection.classList.remove('hidden');
-
-            clothingInputs.forEach(input => {
-                input.value = 0;
-            });
-
+            clothingSec.classList.remove('hidden');
+            unitSec.classList.add('hidden');
+        } else if (kode === 'L005' || kode === 'L006') {
+            clothingSec.classList.add('hidden');
+            unitSec.classList.remove('hidden');
         } else {
-            satuanSection.classList.remove('hidden');
-
-            const label = document.getElementById('satuanItemLabel');
-            const description = document.getElementById('satuanDescription');
-
-            if (kode === 'L005') {
-                label.innerText = 'Jumlah Jas / Blazer (pcs)';
-                description.innerText =
-                    'Masukkan jumlah jas atau blazer yang akan di-dry clean.';
-            } else {
-                label.innerText = 'Jumlah Bed Cover / Selimut (pcs)';
-                description.innerText =
-                    'Masukkan jumlah bed cover atau selimut yang akan dicuci.';
-            }
-
-            document.getElementById('satuanQuantity').value = 1;
+            clothingSec.classList.add('hidden');
+            unitSec.classList.add('hidden');
         }
-
-        calculateOrder();
+        calculateTotal();
     }
 
-    function calculateOrder() {
+    function calculateTotal() {
         const select = document.getElementById('serviceSelect');
+        const selected = select.options[select.selectedIndex];
+        if (!selected || !selected.value) return;
 
-        if (!select.value) {
-            return;
-        }
-
-        const option = select.options[select.selectedIndex];
-
-        const kode = option.dataset.kode;
-        const nama = option.dataset.nama;
-        const harga = parseFloat(option.dataset.harga);
-
-        let jumlahPcs = 0;
-        let beratGram = 0;
-        let jumlahHitung = 0;
-        let totalHarga = 0;
-        let beratKg = 0;
+        const kode = selected.dataset.kode;
+        const harga = parseFloat(selected.dataset.harga) || 0;
+        const nama = selected.dataset.nama || '';
+        let jumlah = 0;
+        let total = 0;
 
         if (kode === 'L001' || kode === 'L004') {
-
-            clothingInputs.forEach(input => {
-                const qty = parseInt(input.value) || 0;
-                const weight = parseFloat(input.dataset.weight);
-
-                jumlahPcs += qty;
-                beratGram += qty * weight;
-            });
-
-            if (jumlahPcs === 0) {
-                document.getElementById('priceSummary').classList.add('hidden');
-                document.getElementById('jumlahInput').value = '';
-                return;
-            }
-
-            // Pembulatan ke atas setiap 0,1 kg.
-            beratKg = Math.ceil((beratGram / 1000) * 10) / 10;
-
-            jumlahHitung = beratKg;
-            totalHarga = beratKg * harga;
-
-            document.getElementById('weightSummary').classList.remove('hidden');
-
-        } else {
-
-            jumlahPcs = parseInt(
-                document.getElementById('satuanQuantity').value
-            ) || 0;
-
-            if (jumlahPcs < 1) {
-                document.getElementById('priceSummary').classList.add('hidden');
-                document.getElementById('jumlahInput').value = '';
-                return;
-            }
-
-            jumlahHitung = jumlahPcs;
-            totalHarga = jumlahPcs * harga;
-
-            document.getElementById('weightSummary').classList.add('hidden');
-        }
-
-        // Kirim nilai jumlah ke Controller.
-        document.getElementById('jumlahInput').value = jumlahHitung;
-
-        document.getElementById('priceSummary').classList.remove('hidden');
-
-        document.getElementById('summaryService').innerText = nama;
-
-        document.getElementById('summaryQuantity').innerText =
-            jumlahPcs + ' pcs';
-
-        document.getElementById('summaryWeight').innerText =
-            beratKg.toFixed(1) + ' kg';
-
-        document.getElementById('summaryRate').innerText =
-            'Rp' + harga.toLocaleString('id-ID') +
-            (kode === 'L001' || kode === 'L004' ? '/kg' : '/pcs');
-
-        document.getElementById('summaryTotal').innerText =
-            'Rp' + Math.round(totalHarga).toLocaleString('id-ID');
-    }
-
-    // Validasi sebelum form dikirim.
-    document.getElementById('orderForm').addEventListener('submit', function(event) {
-
-        const select = document.getElementById('serviceSelect');
-
-        if (!select.value) {
-            event.preventDefault();
-           showAlert('Silakan pilih jenis layanan terlebih dahulu.');
-            return;
-        }
-
-        const jumlah = document.getElementById('jumlahInput').value;
-
-        if (!jumlah || parseFloat(jumlah) <= 0) {
-            event.preventDefault();
-            showAlert('Silakan isi jumlah pakaian atau barang terlebih dahulu.');
-            return;
-        }
-
-        const option = select.options[select.selectedIndex];
-        const kode = option.dataset.kode;
-
-        // Pastikan layanan kiloan memiliki minimal satu pakaian.
-        if (kode === 'L001' || kode === 'L004') {
-            let totalPcs = 0;
-
-            clothingInputs.forEach(input => {
-                totalPcs += parseInt(input.value) || 0;
-            });
-
-            if (totalPcs < 1) {
-                event.preventDefault();
-                showAlert('Masukkan minimal satu pakaian.');
-                return;
-            }
-        }
-
-        // Pastikan layanan satuan menggunakan jumlah bulat.
-        if (kode === 'L005' || kode === 'L006') {
-            const qty = Number(
-                document.getElementById('satuanQuantity').value
-            );
-
-            if (!Number.isInteger(qty) || qty < 1) {
-                event.preventDefault();
-                showAlert('Jumlah barang harus berupa angka bulat minimal 1 pcs.');
-                return;
-            }
-        }
-    });
-</script>
-
-<script>
-    // ===== Cek status pembayaran otomatis =====
-    // Pengecekan berikutnya baru dimulai SETELAH pengecekan sebelumnya
-    // selesai, jadi permintaan tidak menumpuk kalau server sedang lambat.
-    let pembayaranTimer = null;
-    let pembayaranToken = 0;
-
-    function mulaiCekPembayaran(kode, statusElId) {
-        hentikanCekPembayaran();
-
-        const token = ++pembayaranToken;
-        const urlStatus = @json(url('/pelanggan/pesanan')) + '/' + encodeURIComponent(kode) + '/status';
-
-        async function cek() {
-            if (token !== pembayaranToken) return;
-
-            try {
-                const ctrl = new AbortController();
-                const batas = setTimeout(function () { ctrl.abort(); }, 20000);
-
-                const res = await fetch(urlStatus, {
-                    headers: { 'Accept': 'application/json' },
-                    signal: ctrl.signal
-                });
-                clearTimeout(batas);
-
-                if (res.ok) {
-                    const data = await res.json();
-                    if (token !== pembayaranToken) return;
-
-                    if (data.status_pembayaran !== 'Pending') {
-                        hentikanCekPembayaran();
-
-                        const el = document.getElementById(statusElId);
-                        if (el) {
-                            const sukses = data.status_pembayaran === 'Lunas';
-                            el.textContent = sukses
-                                ? 'Pembayaran berhasil! Memuat ulang halaman...'
-                                : 'Pembayaran ' + data.status_pembayaran.toLowerCase() + '. Memuat ulang halaman...';
-                            el.className = 'mb-5 text-sm font-bold ' + (sukses ? 'text-emerald-600' : 'text-red-600');
-                        }
-
-                        setTimeout(function () {
-                            window.location.href = @json(route('pelanggan.dashboard'));
-                        }, 1500);
-                        return;
-                    }
+            let totalGram = 0;
+            document.querySelectorAll('.clothing-input').forEach(inp => {
+                const qty = parseInt(inp.value) || 0;
+                const match = inp.name.match(/\[(.*?)\]/);
+                const type = match ? match[1] : '';
+                if (clothesWeights[type] && qty > 0) {
+                    totalGram += qty * clothesWeights[type];
                 }
-            } catch (e) {
-                // Abaikan, coba lagi nanti.
-            }
-
-            if (token === pembayaranToken) {
-                pembayaranTimer = setTimeout(cek, 5000);
-            }
+            });
+            const beratKg = totalGram > 0 ? Math.ceil((totalGram / 1000) * 10) / 10 : 0;
+            jumlah = beratKg;
+            total = beratKg * harga;
+            document.getElementById('summaryDetails').innerText = beratKg.toFixed(1) + ' kg • Rp ' + Math.round(harga).toLocaleString('id-ID') + '/kg';
+        } else {
+            const qty = parseInt(document.getElementById('satuanQuantity').value) || 1;
+            jumlah = qty;
+            total = qty * harga;
+            document.getElementById('summaryDetails').innerText = qty + ' pcs • Rp ' + Math.round(harga).toLocaleString('id-ID') + '/pcs';
         }
 
-        pembayaranTimer = setTimeout(cek, 3000);
+        document.getElementById('jumlahInput').value = jumlah;
+        document.getElementById('summaryService').innerText = nama;
+        document.getElementById('summaryTotal').innerText = 'Rp ' + Math.round(total).toLocaleString('id-ID');
+        document.getElementById('priceSummary').classList.remove('hidden');
     }
 
-    function hentikanCekPembayaran() {
-        pembayaranToken++;
-        if (pembayaranTimer) {
-            clearTimeout(pembayaranTimer);
-            pembayaranTimer = null;
+    // Modal Detail Pesanan AJAX
+    async function bukaDetailPesanan(id) {
+        document.getElementById('detailModal').classList.remove('hidden');
+        document.getElementById('detailLoading').classList.remove('hidden');
+        document.getElementById('detailContent').classList.add('hidden');
+
+        try {
+            const res = await fetch('{{ url("/pelanggan/pesanan") }}/' + id + '/detail', {
+                headers: { 'Accept': 'application/json' }
+            });
+            const resData = await res.json();
+            if (resData.success) {
+                const d = resData.data;
+                document.getElementById('detailKode').textContent = d.kode_pesanan;
+                document.getElementById('detailTanggal').textContent = d.tanggal_pesanan;
+                document.getElementById('detailStatusLaundry').textContent = d.status_laundry;
+                document.getElementById('detailStatusBayar').textContent = d.status_pembayaran + ' (' + d.metode_pembayaran + ')';
+                document.getElementById('detailStatusBayar').className = 'px-2.5 py-1 rounded-full text-xs font-bold ' +
+                    (d.status_pembayaran === 'Lunas' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800');
+
+                document.getElementById('detailCatatan').textContent = d.catatan || 'Tidak ada catatan tambahan.';
+                document.getElementById('detailAlamat').textContent = d.alamat_penjemputan;
+                document.getElementById('detailTotal').textContent = d.total_harga_format;
+
+                // Render Layanan List
+                const list = document.getElementById('detailLayananList');
+                list.innerHTML = '';
+                d.layanan.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'flex justify-between items-center';
+                    row.innerHTML = '<b>' + item.nama_layanan + ' (' + item.jumlah + ' ' + item.satuan + ')</b><span>Rp ' + Number(item.subtotal).toLocaleString('id-ID') + '</span>';
+                    list.appendChild(row);
+                });
+
+                // Kurir
+                const kurirBox = document.getElementById('detailKurirBox');
+                if (d.pengiriman) {
+                    kurirBox.classList.remove('hidden');
+                    document.getElementById('detailKurirInfo').innerHTML = 'Nama: <b>' + d.pengiriman.nama_kurir + '</b> (' + d.pengiriman.no_hp_kurir + ') • Resi: ' + d.pengiriman.no_resi;
+                } else {
+                    kurirBox.classList.add('hidden');
+                }
+
+                // Upload Bukti Form
+                const uploadSec = document.getElementById('detailUploadSection');
+                if (d.status_pembayaran === 'Pending') {
+                    uploadSec.classList.remove('hidden');
+                    document.getElementById('detailUploadForm').action = '{{ url("/pelanggan/pesanan") }}/' + d.id_pesanan + '/upload-bukti';
+                } else {
+                    uploadSec.classList.add('hidden');
+                }
+
+                // Cetak Nota Button
+                document.getElementById('detailNotaBtn').href = '{{ url("/pelanggan/pesanan") }}/' + d.id_pesanan + '/nota';
+
+                document.getElementById('detailLoading').classList.add('hidden');
+                document.getElementById('detailContent').classList.remove('hidden');
+            }
+        } catch (e) {
+            document.getElementById('detailLoading').textContent = 'Gagal memuat rincian pesanan.';
         }
     }
 
-    // ===== Modal QR (tombol "Bayar" di riwayat) =====
+    function closeDetailModal() {
+        document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    // Realtime polling
+    let bayarTimer = null;
     function openQrModal(btn) {
         document.getElementById('qrModalImage').src = btn.dataset.qr;
-        document.getElementById('qrModalKode').textContent = btn.dataset.kode;
-        document.getElementById('qrModalTotal').textContent =
-            'Rp' + Number(btn.dataset.total).toLocaleString('id-ID');
-
-        const status = document.getElementById('qrModalStatus');
-        status.textContent = 'Menunggu pembayaran... status akan diperbarui otomatis.';
-        status.className = 'mb-5 text-xs text-slate-500';
-
+        document.getElementById('qrModalKode').textContent = '#' + btn.dataset.kode;
+        document.getElementById('qrModalTotal').textContent = 'Rp ' + Number(btn.dataset.total).toLocaleString('id-ID');
         document.getElementById('qrModal').classList.remove('hidden');
         mulaiCekPembayaran(btn.dataset.kode, 'qrModalStatus');
     }
-
     function closeQrModal() {
         document.getElementById('qrModal').classList.add('hidden');
         hentikanCekPembayaran();
     }
 
-    // ===== Modal Ulasan =====
-    function openReviewModal(btn) {
-        const form = document.getElementById('reviewForm');
-
-        form.reset();
-        form.action = @json(route('pelanggan.ulasan.store', ['idPesanan' => '__ID__'])).replace('__ID__', btn.dataset.id);
-
-        document.getElementById('reviewKode').textContent = btn.dataset.kode;
-        setRating(0);
-        document.getElementById('reviewModal').classList.remove('hidden');
+    function mulaiCekPembayaran(kode, elemId) {
+        hentikanCekPembayaran();
+        async function cek() {
+            try {
+                const res = await fetch('{{ url("/pelanggan/pesanan") }}/' + encodeURIComponent(kode) + '/status');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.status_pembayaran === 'Lunas') {
+                        const el = document.getElementById(elemId);
+                        if (el) {
+                            el.textContent = '✓ Pembayaran Lunas! Memuat ulang halaman...';
+                            el.className = 'text-xs font-bold text-emerald-600';
+                        }
+                        setTimeout(() => window.location.reload(), 1500);
+                        return;
+                    }
+                }
+            } catch (e) {}
+            bayarTimer = setTimeout(cek, 5000);
+        }
+        bayarTimer = setTimeout(cek, 3000);
     }
 
+    function hentikanCekPembayaran() {
+        if (bayarTimer) {
+            clearTimeout(bayarTimer);
+            bayarTimer = null;
+        }
+    }
+
+    // Modal Ulasan
+    function openReviewModal(btn) {
+        document.getElementById('reviewForm').action = '{{ url("/pelanggan/ulasan") }}/' + btn.dataset.id;
+        document.getElementById('reviewModal').classList.remove('hidden');
+    }
     function closeReviewModal() {
         document.getElementById('reviewModal').classList.add('hidden');
     }
-
     function setRating(n) {
-        document.getElementById('reviewRating').value = n > 0 ? n : '';
-
-        document.querySelectorAll('#reviewStars button').forEach(function (b) {
-            const aktif = Number(b.dataset.star) <= n;
-            b.classList.toggle('text-amber-400', aktif);
-            b.classList.toggle('text-slate-300', !aktif);
+        document.getElementById('reviewRating').value = n;
+        document.querySelectorAll('#reviewStars button').forEach(b => {
+            const val = parseInt(b.dataset.star);
+            b.classList.toggle('text-amber-400', val <= n);
+            b.classList.toggle('text-slate-300', val > n);
         });
-
-        if (n > 0) {
-            document.getElementById('reviewError').classList.add('hidden');
-        }
     }
 
-    document.getElementById('reviewForm').addEventListener('submit', function (e) {
-        if (!document.getElementById('reviewRating').value) {
-            e.preventDefault();
-            document.getElementById('reviewError').classList.remove('hidden');
-        }
-    });
-
-    // ===== Popup QR setelah pesanan baru dibuat: ikut dicek otomatis =====
     @if(session('qr_code_url'))
         mulaiCekPembayaran(@json(session('kode_pesanan')), 'qrSessionStatus');
     @endif
 </script>
+@endpush
 
 @endsection
