@@ -65,22 +65,34 @@
 
     <div class="flex-1 flex overflow-hidden">
         <!-- ================= SIDEBAR UTAMA ================= -->
-        <aside id="mainSidebar" class="sidebar-container fixed lg:static inset-y-0 left-0 z-50 flex flex-col justify-between text-white p-5 -translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-2xl shrink-0">
+        <!-- Khusus Role Owner: Hilangkan lg:translate-x-0 agar bisa ditutup/diberi animasi geser ke kiri -->
+        <aside id="mainSidebar" class="sidebar-container fixed lg:static inset-y-0 left-0 z-50 flex flex-col justify-between text-white p-5 transition-transform duration-300 shadow-2xl shrink-0 {{ $role === 'owner' ? '' : '-translate-x-full lg:translate-x-0' }}">
             <div>
-                <!-- Brand Header -->
-                <div class="flex items-center gap-3.5 pb-6 mb-6 border-b border-white/10">
-                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center font-black text-2xl text-white shadow-lg shadow-sky-500/25">
-                        A
-                    </div>
-                    <div>
-                        <div class="font-black text-xl tracking-tight leading-tight flex items-center gap-2">
-                            <span>ArsyClean</span>
+                <!-- Brand Header + Tombol Garis Tiga Putih Khusus Owner (Menggeser Sidebar ke Kiri) -->
+                <div class="flex items-center justify-between pb-6 mb-6 border-b border-white/10">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center font-black text-2xl text-white shadow-lg shadow-sky-500/25">
+                            A
                         </div>
-                        <span class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider
-                            {{ $role === 'owner' ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30' : 'bg-sky-400/20 text-sky-200 border border-sky-400/30' }}">
-                            {{ $role === 'owner' ? '👑 Owner Eksekutif' : '🧺 Petugas Admin' }}
-                        </span>
+                        <div>
+                            <div class="font-black text-xl tracking-tight leading-tight flex items-center gap-2">
+                                <span>ArsyClean</span>
+                            </div>
+                            <span class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider
+                                {{ $role === 'owner' ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30' : 'bg-sky-400/20 text-sky-200 border border-sky-400/30' }}">
+                                {{ $role === 'owner' ? '👑 Owner Eksekutif' : '🧺 Petugas Admin' }}
+                            </span>
+                        </div>
                     </div>
+
+                    <!-- HANYA UNTUK OWNER: Tombol Garis Tiga Putih di Header Sidebar untuk Tutup/Geser Sidebar -->
+                    @if($role === 'owner')
+                    <button type="button" onclick="toggleSidebar()" class="p-2 rounded-xl text-white hover:bg-white/10 transition focus:outline-none" title="Geser / Tutup Sidebar ke Kiri">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    @endif
                 </div>
 
                 <!-- Navigation Links -->
@@ -151,11 +163,11 @@
                         </a>
 
                     @elseif($role === 'owner')
-                        <!-- KHUSUS ROLE OWNER (Ukuran teks & padding diperbesar) -->
+                        <!-- MENU KHUSUS OWNER (Warna SVG Putih Seragam) -->
                         <a href="{{ route('owner.dashboard') }}"
                            class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('owner.dashboard') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
-                                <span class="text-xl">📈</span>
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 <span>Dashboard Eksekutif</span>
                             </div>
                         </a>
@@ -163,7 +175,7 @@
                         <a href="{{ route('owner.laporan') }}"
                            class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('owner.laporan') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
-                                <span class="text-xl">📑</span>
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 <span>Laporan Keuangan</span>
                             </div>
                         </a>
@@ -171,7 +183,7 @@
                         <a href="{{ route('owner.admin.index') }}"
                            class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('owner.admin.index') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
-                                <span class="text-xl">👥</span>
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                 <span>Kelola Admin</span>
                             </div>
                         </a>
@@ -179,7 +191,7 @@
                         <a href="{{ route('owner.layanan') }}"
                            class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('owner.layanan') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
-                                <span class="text-xl">🧺</span>
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                                 <span>Katalog Tarif</span>
                             </div>
                         </a>
@@ -187,7 +199,7 @@
                         <a href="{{ route('profile') }}"
                            class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('profile') ? 'active' : '' }}">
                             <div class="flex items-center gap-3">
-                                <span class="text-xl">👤</span>
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 <span>Profil Saya</span>
                             </div>
                         </a>
@@ -195,7 +207,7 @@
                         <a href="{{ route('home') }}"
                            class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200">
                             <div class="flex items-center gap-3">
-                                <span class="text-xl">🏠</span>
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                                 <span>Halaman Utama</span>
                             </div>
                         </a>
@@ -203,7 +215,7 @@
                 </nav>
             </div>
 
-            <!-- User Info Footer di Sidebar & Tombol Logout Bawaan -->
+            <!-- User Info Footer di Sidebar & Tombol Logout -->
             <div class="pt-5 border-t border-white/10 space-y-3">
                 <div class="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-white/5 border border-white/5">
                     <a href="{{ route('profile') }}" class="flex items-center gap-3 overflow-hidden group" title="Klik untuk membuka profil">
@@ -237,9 +249,11 @@
             <!-- Top Navbar Header -->
             <header class="sticky top-0 z-30 bg-white border-b border-slate-200/80 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
                 <div class="flex items-center gap-3">
-                    <button type="button" onclick="toggleSidebar()" class="p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition">
+                    <!-- Tombol Garis Tiga Awal (Top Navbar): Membuka/memunculkan kembali sidebar dari kiri -->
+                    <button type="button" onclick="toggleSidebar()" class="p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition focus:outline-none" title="Buka / Tampilkan Sidebar">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
+
                     <div>
                         <h2 class="text-base sm:text-lg font-black text-slate-800">
                             @yield('page_title', 'ArsyClean Laundry')
@@ -259,7 +273,6 @@
                         </div>
                     </a>
 
-                    <!-- HANYA TAMPILKAN TOMBOL LOGOUT ATAS APABILA BUKAN OWNER -->
                     @if($role !== 'owner')
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
@@ -276,7 +289,7 @@
 
             <!-- Isi Halaman Konten -->
             <main class="flex-1 p-4 sm:p-7 max-w-7xl w-full mx-auto">
-                <!-- ================= GLOBAL ALERT MESSAGES ================= -->
+                <!-- GLOBAL ALERT MESSAGES -->
                 @if(session('success'))
                     <div class="mb-6 p-4 sm:p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 font-bold flex items-start gap-3.5 shadow-sm">
                         <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 text-base font-black">✓</div>
@@ -321,12 +334,14 @@
         </div>
     </div>
 
-    <!-- Script Toggle Sidebar Bawaan Proyek -->
+    <!-- Script Toggle Sidebar -->
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('mainSidebar');
             const overlay = document.getElementById('sidebarOverlay');
+            
             if (sidebar) {
+                // Menambah/menghapus class penutup ke kiri
                 sidebar.classList.toggle('-translate-x-full');
             }
             if (overlay) {
