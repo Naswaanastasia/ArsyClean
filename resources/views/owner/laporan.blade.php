@@ -7,13 +7,14 @@
 <div class="space-y-7">
 
     <!-- Header Banner -->
-    <div class="bg-gradient-to-r from-slate-900 via-[#0f2a5c] to-blue-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="bg-gradient-to-r from-[#0f2a5c] via-[#163a78] to-[#0a1e42] rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-blue-900/40">
         <div>
-            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-400 text-amber-950 mb-2">
-                📑 Buku Kas &amp; Omzet
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-400 text-amber-950 mb-2 shadow-xs">
+                <svg class="w-4 h-4 text-amber-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Buku Kas &amp; Omzet
             </div>
             <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Laporan Keuangan &amp; Transaksi</h1>
-            <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl">
+            <p class="text-xs sm:text-sm text-blue-100 mt-1 max-w-xl font-medium">
                 Filter transaksi berdasarkan rentang tanggal dan cetak dokumen laporan resmi berformat PDF untuk arsip pembukuan.
             </p>
         </div>
@@ -21,7 +22,8 @@
         <a href="{{ route('owner.cetak.laporan', ['tanggal_mulai' => request('tanggal_mulai'), 'tanggal_selesai' => request('tanggal_selesai')]) }}"
            target="_blank"
            class="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs shadow-md shadow-amber-400/25 transition-all flex items-center gap-2 shrink-0">
-            <span>🖨️ Cetak Dokumen PDF</span>
+            <svg class="w-4 h-4 text-amber-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            <span>Cetak Dokumen PDF</span>
         </a>
     </div>
 
@@ -33,7 +35,7 @@
                     Dari Tanggal:
                 </label>
                 <input type="date" name="tanggal_mulai" value="{{ request('tanggal_mulai') }}"
-                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <div class="sm:col-span-4">
@@ -41,12 +43,12 @@
                     Sampai Tanggal:
                 </label>
                 <input type="date" name="tanggal_selesai" value="{{ request('tanggal_selesai') }}"
-                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <div class="sm:col-span-4 flex items-center gap-2">
                 <button type="submit"
-                        class="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all">
+                        class="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-xs transition-all">
                     Terapkan Filter
                 </button>
                 <a href="{{ route('owner.laporan') }}"
@@ -61,7 +63,7 @@
                 Periode: <b class="text-slate-800">{{ request('tanggal_mulai') ? request('tanggal_mulai') . ' s/d ' . request('tanggal_selesai') : 'Semua Waktu' }}</b>
             </div>
             <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-400 font-semibold">Total Omzet Lunas Periode Ini:</span>
+                <span class="text-xs text-slate-400 font-bold uppercase">Total Omzet Lunas Periode Ini:</span>
                 <span class="text-xl sm:text-2xl font-black text-emerald-700">Rp {{ number_format($totalOmzet, 0, ',', '.') }}</span>
             </div>
         </div>
@@ -72,7 +74,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-black uppercase text-slate-500 tracking-wider">
+                    <tr class="bg-slate-50 border-b border-slate-200 text-xs font-black uppercase text-slate-600 tracking-wider">
                         <th class="py-4 px-5">Kode Bayar</th>
                         <th class="py-4 px-5">Pesanan</th>
                         <th class="py-4 px-5">Pelanggan</th>
@@ -83,7 +85,7 @@
                         <th class="py-4 px-5">Verifikator</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 text-xs">
+                <tbody class="divide-y divide-slate-100 text-xs font-medium">
                     @forelse($pembayarans as $bayar)
                         @php
                             $isLunas = $bayar->status_pembayaran === 'Lunas';
@@ -92,7 +94,7 @@
                             <td class="py-4 px-5 font-mono font-bold text-slate-900">
                                 #{{ $bayar->kode_pembayaran }}
                             </td>
-                            <td class="py-4 px-5 font-mono font-bold text-blue-800">
+                            <td class="py-4 px-5 font-mono font-bold text-blue-900">
                                 #{{ $bayar->pesanan->kode_pesanan ?? '-' }}
                             </td>
                             <td class="py-4 px-5 font-bold text-slate-800">
@@ -108,7 +110,7 @@
                                 Rp {{ number_format($bayar->jumlah_bayar, 0, ',', '.') }}
                             </td>
                             <td class="py-4 px-5">
-                                <span class="px-3 py-1 rounded-full text-[11px] font-bold border {{ $isLunas ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-amber-100 text-amber-900 border-amber-300' }}">
+                                <span class="px-3 py-1 rounded-full text-xs font-black border {{ $isLunas ? 'bg-emerald-100 text-emerald-950 border-emerald-300' : 'bg-amber-100 text-amber-950 border-amber-300' }}">
                                     {{ $bayar->status_pembayaran }}
                                 </span>
                             </td>

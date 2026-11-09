@@ -20,7 +20,9 @@ Route::post('/midtrans/notification', [
 // 2. LANDING PAGE / HOMEPAGE
 // ==========================================
 Route::get('/', function () {
-    return view('landing');
+    $layanans = \App\Models\Layanan::where('status', 'tersedia')->get();
+    $ulasans = \App\Models\Ulasan::with('pesanan.user')->latest('id_ulasan')->take(6)->get();
+    return view('landing', compact('layanans', 'ulasans'));
 })->name('home');
 
 // ==========================================
