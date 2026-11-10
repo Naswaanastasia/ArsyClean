@@ -18,7 +18,6 @@
         }
     </style>
 </head>
-
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col p-4 sm:p-6 lg:p-8">
 
     <!-- Main Login Card -->
@@ -56,7 +55,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('login.process') }}" method="POST" class="space-y-5">
+           <form id="loginForm" action="{{ route('login.process') }}" method="POST" class="space-y-5" novalidate>
                 @csrf
 
                 <!-- Email -->
@@ -166,6 +165,7 @@
         &copy; {{ date('Y') }} ArsyClean Laundry. Sistem Layanan Pengelolaan Laundry Terintegrasi.
     </footer>
 
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function togglePasswordVisibility() {
             const pass = document.getElementById('password');
@@ -176,7 +176,37 @@
             document.getElementById('email').value = email;
             document.getElementById('password').value = pass;
         }
-    </script>
 
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+            const jumlahAngka = (password.match(/[0-9]/g) || []).length;
+            const jumlahKapital = (password.match(/[A-Z]/g) || []).length;
+
+            let pesan = '';
+
+            if (email === '') {
+                pesan = 'Email wajib diisi.';
+            } else if (!emailValid) {
+                pesan = 'Format email belum lengkap, contoh: nama@gmail.com';
+            } else if (password === '') {
+                pesan = 'Kata sandi wajib diisi.';
+            } else if (jumlahAngka < 6 || jumlahKapital < 2) {
+                pesan = 'Kata sandi harus berisi minimal 6 angka dan 2 huruf besar.';
+            }
+
+            if (pesan !== '') {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Periksa kembali',
+                    text: pesan,
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+    </script>
 </body>
 </html>

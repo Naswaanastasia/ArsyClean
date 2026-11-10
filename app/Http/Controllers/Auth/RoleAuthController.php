@@ -255,16 +255,16 @@ class RoleAuthController extends Controller
     }
 
     // LOGOUT
-    public function logout(Request $request)
-    {
-        Auth::guard('web')->logout();
+public function logout(Request $request)
+{
+    Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
-        return redirect()->route('login')
-            ->with('success', 'Anda telah berhasil keluar dari akun.');
-    }
+    return redirect()->route('login')
+        ->with('logout_success', 'Anda berhasil log out.');
+}
 
     // PENGALIHAN DASHBOARD BERDASARKAN ROLE
     public function redirectBasedOnRole(string $role)
