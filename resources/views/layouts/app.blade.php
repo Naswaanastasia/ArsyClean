@@ -26,11 +26,22 @@
             color: #0f172a;
             font-size: 15px;
         }
-        .sidebar-container {
-            width: var(--sidebar-width);
-            background: linear-gradient(180deg, #091733 0%, #0f2a5c 100%);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+       .sidebar-container {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    background: linear-gradient(180deg, #091733 0%, #0f2a5c 100%);
+    transition: width 0.25s ease, min-width 0.25s ease,
+                transform 0.25s ease, padding 0.25s ease;
+}
+
+/* Sidebar saat ditutup di tampilan desktop */
+.sidebar-container.sidebar-collapsed {
+    width: 76px;
+    min-width: 76px;
+    padding-left: 12px;
+    padding-right: 12px;
+    overflow: hidden;
+}
         .nav-item {
             transition: all 0.2s ease-in-out;
         }
@@ -254,8 +265,8 @@
         <!-- ================= AREA KONTEN UTAMA ================= -->
         <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
             <!-- Top Navbar Header (Diselaraskan Warnanya) -->
-            <header class="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
-                <div class="flex items-center gap-3">
+          <header class="sticky top-0 z-30 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-md"
+        style="background: linear-gradient(90deg, #091733 0%, #0f2a5c 100%); border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <!-- Button Garis 3 untuk Menutup / Membuka Sidebar -->
                     <button type="button" onclick="toggleSidebarDesktopMobile()"
                             class="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all flex items-center justify-center font-black"
@@ -340,15 +351,30 @@
 
     <script>
         function toggleSidebarDesktopMobile() {
-            const sidebar = document.getElementById('mainSidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (window.innerWidth < 1024) {
-                sidebar.classList.toggle('-translate-x-full');
-                overlay.classList.toggle('hidden');
-            } else {
-                sidebar.classList.toggle('lg:hidden');
-            }
-        }
+    const sidebar = document.getElementById('mainSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (window.innerWidth < 1024) {
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    } else {
+        sidebar.classList.toggle('sidebar-collapsed');
+    }
+}
+
+window.addEventListener('resize', function () {
+    const sidebar = document.getElementById('mainSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (window.innerWidth >= 1024) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.add('hidden');
+    } else {
+        sidebar.classList.remove('sidebar-collapsed');
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+    }
+});
     </script>
     @stack('scripts')
 </body>

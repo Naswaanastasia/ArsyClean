@@ -1,46 +1,38 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Masuk ke Akun - ArsyClean Laundry</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; font-size: 15px; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between p-4 sm:p-6 lg:p-8">
 
-    <!-- Top Simple Navbar -->
-    <header class="w-full max-w-5xl mx-auto flex items-center justify-between pb-4">
-        <a href="{{ route('home') }}" class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center font-black text-white text-lg shadow-md shadow-sky-500/20">
-                A
-            </div>
-            <span class="font-extrabold text-xl text-slate-900 tracking-tight">ArsyClean</span>
-        </a>
-        <a href="{{ route('home') }}" class="text-xs sm:text-sm font-bold text-slate-500 hover:text-blue-600 transition flex items-center gap-1">
-            <span>&larr;</span> Kembali ke Beranda
-        </a>
-    </header>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col p-4 sm:p-6 lg:p-8">
 
     <!-- Main Login Card -->
-    <main class="flex-1 flex items-center justify-center py-6">
+    <main class="flex-1 flex items-center justify-center">
         <div class="w-full max-w-xl bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden p-8 sm:p-10">
 
             <div class="text-center mb-8">
-                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-blue-50 text-blue-700 mb-3">
-                    🔐 Portal Masuk Sistem
-                </div>
+                
+
                 <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                     Masuk ke Akun Anda
                 </h1>
-                <p class="text-sm text-slate-500 mt-1.5 max-w-sm mx-auto">
-                    Akses portal laundry terpadu untuk Pelanggan, Admin, dan Owner.
-                </p>
+
+                
             </div>
 
             <!-- Error Notification -->
@@ -49,6 +41,7 @@
                     <div class="font-bold flex items-center gap-2">
                         <span>⚠️</span> Gagal masuk:
                     </div>
+
                     <ul class="list-disc list-inside text-xs pl-2 space-y-0.5">
                         @foreach($errors->all() as $err)
                             <li>{{ $err }}</li>
@@ -69,8 +62,9 @@
                 <!-- Email -->
                 <div>
                     <label for="email" class="block text-sm font-bold text-slate-700 mb-1.5">
-                        Alamat Email <span class="text-red-500 font-bold">*</span>
+                        Alamat Email <span class="text-red-500">*</span>
                     </label>
+
                     <input type="email"
                            id="email"
                            name="email"
@@ -83,11 +77,10 @@
 
                 <!-- Password -->
                 <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label for="password" class="block text-sm font-bold text-slate-700">
-                            Kata Sandi <span class="text-red-500 font-bold">*</span>
-                        </label>
-                    </div>
+                    <label for="password" class="block text-sm font-bold text-slate-700 mb-1.5">
+                        Kata Sandi <span class="text-red-500">*</span>
+                    </label>
+
                     <div class="relative">
                         <input type="password"
                                id="password"
@@ -95,6 +88,7 @@
                                required
                                placeholder="Masukkan kata sandi Anda"
                                class="w-full pl-4 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-base font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all">
+
                         <button type="button"
                                 id="togglePasswordBtn"
                                 onclick="togglePasswordVisibility()"
@@ -107,12 +101,17 @@
                 <!-- Remember Me -->
                 <div class="flex items-center justify-between text-sm">
                     <label class="flex items-center gap-2.5 text-slate-600 cursor-pointer">
-                        <input type="checkbox" name="remember" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300">
-                        <span class="font-medium text-xs sm:text-sm">Ingat saya di perangkat ini</span>
+                        <input type="checkbox"
+                               name="remember"
+                               class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300">
+
+                        <span class="font-medium text-xs sm:text-sm">
+                            Ingat saya di perangkat ini
+                        </span>
                     </label>
                 </div>
 
-                <!-- Tombol Submit Login -->
+                <!-- Login Button -->
                 <button type="submit"
                         class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-base rounded-2xl shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2">
                     Masuk Sekarang &rarr;
@@ -122,39 +121,47 @@
             <!-- Link Registrasi -->
             <div class="mt-6 pt-5 border-t border-slate-100 text-center text-sm text-slate-500">
                 Belum memiliki akun pelanggan?
-                <a href="{{ route('register') }}" class="font-bold text-blue-600 hover:underline ml-1">
+
+                <a href="{{ route('register') }}"
+                   class="font-bold text-blue-600 hover:underline ml-1">
                     Daftar di Sini
                 </a>
             </div>
 
             <!-- Quick Demo Testing Credentials -->
             <div class="mt-6 pt-4 border-t border-slate-100 text-xs">
+
                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2 text-center">
                     Akses Cepat Pengujian Role:
                 </span>
+
                 <div class="grid grid-cols-3 gap-2">
+
                     <button type="button"
                             onclick="isiAkun('pelanggan@gmail.com', 'password123')"
                             class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-blue-50 text-center font-bold text-slate-700 text-xs transition">
                         Pelanggan
                     </button>
+
                     <button type="button"
                             onclick="isiAkun('admin@gmail.com', 'admin123')"
                             class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-sky-50 text-center font-bold text-slate-700 text-xs transition">
                         Admin
                     </button>
+
                     <button type="button"
                             onclick="isiAkun('owner@gmail.com', 'owner123')"
                             class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 text-center font-bold text-slate-700 text-xs transition">
                         Owner
                     </button>
+
                 </div>
             </div>
 
         </div>
     </main>
 
-    <!-- Clean Footer -->
+    <!-- Footer -->
     <footer class="w-full max-w-5xl mx-auto pt-4 text-center text-xs text-slate-400">
         &copy; {{ date('Y') }} ArsyClean Laundry. Sistem Layanan Pengelolaan Laundry Terintegrasi.
     </footer>
@@ -164,10 +171,12 @@
             const pass = document.getElementById('password');
             pass.type = pass.type === 'password' ? 'text' : 'password';
         }
+
         function isiAkun(email, pass) {
             document.getElementById('email').value = email;
             document.getElementById('password').value = pass;
         }
     </script>
+
 </body>
 </html>

@@ -7,10 +7,16 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class RoleAuthController extends Controller
 {
+    // ATURAN FORMAT PASSWORD
+    // 6 angka diikuti 2 huruf kapital
+    private const PASSWORD_RULE = 'regex:/^[0-9]{6}[A-Z]{2}$/';
+
+    private const PASSWORD_MESSAGE =
+        'Password harus terdiri dari 6 angka diikuti 2 huruf kapital. Contoh: 123456NA.';
+
     // HALAMAN LOGIN UTAMA
     public function showPortal()
     {
@@ -21,7 +27,7 @@ class RoleAuthController extends Controller
         return view('auth.login');
     }
 
-    // HALAMAN LOGIN PER ROLE (diarahkan ke showPortal dengan opsi role)
+    // HALAMAN LOGIN PER ROLE
     public function showLoginPelanggan()
     {
         return $this->showPortal();
@@ -41,17 +47,24 @@ class RoleAuthController extends Controller
     public function processLogin(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required|string|min:6',
+            'email' => 'required|email',
+            'password' => [
+                'required',
+                'string',
+                self::PASSWORD_RULE,
+            ],
         ], [
-            'email.required'    => 'Silakan masukkan alamat email.',
-            'email.email'       => 'Format email tidak valid.',
+            'email.required' => 'Silakan masukkan alamat email.',
+            'email.email' => 'Format email tidak valid.',
             'password.required' => 'Silakan masukkan kata sandi Anda.',
-            'password.min'      => 'Kata sandi minimal 6 karakter.',
+            'password.regex' => self::PASSWORD_MESSAGE,
         ]);
 
         // CARI AKUN BERDASARKAN EMAIL
-        $user = User::where('email', strtolower(trim($request->email)))->first();
+        $user = User::where(
+            'email',
+            strtolower(trim($request->email))
+        )->first();
 
         if (!$user) {
             return back()
@@ -108,23 +121,57 @@ class RoleAuthController extends Controller
     // PROSES REGISTER PELANGGAN
     public function processRegister(Request $request)
     {
+        // RAPINKAN INPUT SEBELUM VALIDASI
+        $request->merge([
+            'nama' => trim($request->nama ?? ''),
+            'email' => strtolower(trim($request->email ?? '')),
+            'no_hp' => trim($request->no_hp ?? ''),
+            'alamat' => trim($request->alamat ?? ''),
+        ]);
+
+        // VALIDASI DATA REGISTER
         $request->validate([
-            'nama'     => 'required|string|max:100',
-            'email'    => 'required|email|max:100|unique:users,email',
-            'no_hp'    => 'required|numeric|digits_between:10,15',
-            'alamat'   => 'required|string|max:500',
-            'password' => 'required|string|min:6|max:100',
+            'nama' => [
+                'required',
+                'string',
+                'min:3',
+                'max:100',
+                'regex:/^[\pL\s.\'-]+$/u',
+            ],
+
+            'email' => 'required|email|max:100|unique:users,email',
+
+            'no_hp' => [
+                'required',
+                'regex:/^[0-9]{10,15}$/',
+            ],
+
+            'alamat' => 'required|string|min:10|max:500',
+
+            'password' => [
+                'required',
+                'string',
+                self::PASSWORD_RULE,
+            ],
         ], [
-            'nama.required'         => 'Nama lengkap wajib diisi.',
-            'email.required'        => 'Alamat email wajib diisi.',
-            'email.email'           => 'Format email tidak valid.',
-            'email.unique'          => 'Alamat email ini sudah terdaftar. Silakan login atau gunakan email lain.',
-            'no_hp.required'        => 'Nomor WhatsApp wajib diisi.',
-            'no_hp.numeric'         => 'Nomor WhatsApp harus berupa angka numerik (hanya angka).',
-            'no_hp.digits_between'  => 'Nomor WhatsApp harus terdiri dari 10 hingga 15 digit angka.',
-            'alamat.required'       => 'Alamat penjemputan lengkap wajib diisi.',
-            'password.required'     => 'Kata sandi wajib diisi.',
-            'password.min'          => 'Kata sandi minimal 6 karakter.',
+            'nama.required' => 'Nama lengkap wajib diisi.',
+            'nama.min' => 'Nama minimal 3 karakter.',
+            'nama.max' => 'Nama maksimal 100 karakter.',
+            'nama.regex' => 'Nama hanya boleh berisi huruf, spasi, titik, apostrof, dan tanda hubung.',
+
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah terdaftar. Silakan gunakan email lain.',
+
+            'no_hp.required' => 'Nomor WhatsApp wajib diisi.',
+            'no_hp.regex' => 'Nomor WhatsApp harus berupa angka saja, 10–15 digit.',
+
+            'alamat.required' => 'Alamat penjemputan wajib diisi.',
+            'alamat.min' => 'Alamat minimal 10 karakter.',
+            'alamat.max' => 'Alamat maksimal 500 karakter.',
+
+            'password.required' => 'Kata sandi wajib diisi.',
+            'password.regex' => self::PASSWORD_MESSAGE,
         ]);
 
         // BUAT KODE USER UNIK
@@ -134,13 +181,13 @@ class RoleAuthController extends Controller
         // SIMPAN AKUN PELANGGAN
         $user = User::create([
             'kode_user' => $kodeUser,
-            'nama'      => trim($request->nama),
-            'email'     => strtolower(trim($request->email)),
-            'password'  => Hash::make($request->password),
-            'no_hp'     => trim($request->no_hp),
-            'alamat'    => trim($request->alamat),
-            'role'      => 'pelanggan',
-            'status'    => 'aktif',
+            'nama' => $request->nama,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'no_hp' => $request->no_hp,
+            'alamat' => $request->alamat,
+            'role' => 'pelanggan',
+            'status' => 'aktif',
         ]);
 
         // LOGIN OTOMATIS SETELAH REGISTER
@@ -151,34 +198,46 @@ class RoleAuthController extends Controller
             ->with('login_berhasil', 'Pendaftaran berhasil. Selamat datang di ArsyClean Laundry!');
     }
 
-    // HALAMAN LIHAT & EDIT PROFIL (Semua Role)
+    // HALAMAN LIHAT & EDIT PROFIL
     public function showProfile()
     {
         $user = Auth::user();
+
         return view('profile', compact('user'));
     }
 
-    // UPDATE PROFIL (Semua Role)
+    // UPDATE PROFIL
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
 
         $request->validate([
-            'nama'     => 'required|string|max:100',
-            'email'    => 'required|email|max:100|unique:users,email,' . $user->id_user . ',id_user',
-            'no_hp'    => 'required|numeric|digits_between:10,15',
-            'alamat'   => 'required|string|max:500',
-            'password' => 'nullable|string|min:6|max:100',
+            'nama' => 'required|string|max:100',
+
+            'email' => 'required|email|max:100|unique:users,email,' . $user->id_user . ',id_user',
+
+            'no_hp' => 'required|numeric|digits_between:10,15',
+
+            'alamat' => 'required|string|max:500',
+
+            'password' => [
+                'nullable',
+                'string',
+                self::PASSWORD_RULE,
+            ],
         ], [
-            'nama.required'        => 'Nama lengkap wajib diisi.',
-            'email.required'       => 'Alamat email wajib diisi.',
-            'email.email'          => 'Format email tidak valid.',
-            'email.unique'         => 'Alamat email sudah digunakan oleh pengguna lain.',
-            'no_hp.required'       => 'Nomor WhatsApp wajib diisi.',
-            'no_hp.numeric'        => 'Nomor WhatsApp harus berupa angka numerik.',
+            'nama.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Alamat email sudah digunakan oleh pengguna lain.',
+
+            'no_hp.required' => 'Nomor WhatsApp wajib diisi.',
+            'no_hp.numeric' => 'Nomor WhatsApp harus berupa angka numerik.',
             'no_hp.digits_between' => 'Nomor WhatsApp harus antara 10 hingga 15 digit angka.',
-            'alamat.required'      => 'Alamat lengkap wajib diisi.',
-            'password.min'         => 'Kata sandi baru minimal 6 karakter.',
+
+            'alamat.required' => 'Alamat lengkap wajib diisi.',
+
+            'password.regex' => self::PASSWORD_MESSAGE,
         ]);
 
         $user->nama = trim($request->nama);
@@ -212,9 +271,9 @@ class RoleAuthController extends Controller
     {
         return match (strtolower(trim($role))) {
             'pelanggan' => redirect()->route('pelanggan.dashboard'),
-            'admin'     => redirect()->route('admin.dashboard'),
-            'owner'     => redirect()->route('owner.dashboard'),
-            default     => redirect()->route('login'),
+            'admin' => redirect()->route('admin.dashboard'),
+            'owner' => redirect()->route('owner.dashboard'),
+            default => redirect()->route('login'),
         };
     }
 }

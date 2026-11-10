@@ -25,65 +25,100 @@
     </div>
 
     <!-- Grid Kartu Layanan -->
+    <!-- Grid Kartu Layanan -->
+    @php
+        // Layanan yang bisa dipesan online tampil duluan, yang self-service (koin) dikumpulkan di akhir
+        $layanans = $layanans->sortBy(function ($l) {
+            return strtolower($l->jenis_layanan) === 'koin' ? 1 : 0;
+        })->values();
+    @endphp
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach($layanans as $layanan)
             @php
                 $isPickup = str_contains(strtolower($layanan->nama_layanan . $layanan->jenis_layanan), 'antar') || str_contains(strtolower($layanan->nama_layanan . $layanan->jenis_layanan), 'pickup');
                 $isKoin = strtolower($layanan->jenis_layanan) === 'koin';
-                $isSatuan = strtolower($layanan->satuan) !== 'kg';
+
+                // Ambil nama file gambar: kolom "gambar" dulu, kalau kosong coba kolom "icon" (jika isinya nama file gambar)
+                $gambarFile = $layanan->gambar ?? null;
+                if (!$gambarFile && $layanan->icon && preg_match('/\.(jpe?g|png|webp|gif|svg)$/i', $layanan->icon)) {
+                    $gambarFile = $layanan->icon;
+                }
+                $gambarUrl = $gambarFile
+                    ? (str_starts_with($gambarFile, 'http') ? $gambarFile : asset('images/layanan/' . $gambarFile))
+                    : null;
+
+                $badgeClass = $isPickup
+                    ? 'bg-orange-100 text-orange-950 border-orange-200'
+                    : ($isKoin ? 'bg-purple-100 text-purple-950 border-purple-200' : 'bg-sky-100 text-sky-950 border-sky-200');
             @endphp
 
-            <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 hover:border-blue-400 shadow-sm hover:shadow-xl transition-all duration-200 flex flex-col justify-between group">
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-200 group-hover:scale-105 transition-transform">
-                            @if($isPickup)
-                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
-                            @elseif($isKoin)
-                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            @else
-                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                            @endif
-                        </div>
-                        <span class="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider
-                            {{ $isPickup ? 'bg-orange-100 text-orange-950 border border-orange-200' : ($isKoin ? 'bg-purple-100 text-purple-950 border border-purple-200' : 'bg-sky-100 text-sky-950 border border-sky-200') }}">
-                            {{ $layanan->jenis_layanan }}
-                        </span>
-                    </div>
+            <div class="bg-white rounded-3xl border border-slate-200 hover:border-blue-400 shadow-sm hover:shadow-xl transition-all duration-200 flex flex-col overflow-hidden group">
 
-                    <div>
-                        <h3 class="text-xl font-black text-slate-900 group-hover:text-blue-700 transition-colors">
-                            {{ $layanan->nama_layanan }}
-                        </h3>
-                        <p class="text-sm text-slate-600 mt-2 leading-relaxed line-clamp-2 font-medium">
-                            {{ $layanan->deskripsi ?? 'Layanan pencucian profesional dengan deterjen ramah serat kain dan hasil setrika rapi wangi.' }}
-                        </p>
-                    </div>
+                {{-- GAMBAR LAYANAN (kalau gambar tidak ada / gagal dimuat, tampil ikon cadangan) --}}
+                <div class="relative h-44 shrink-0 overflow-hidden bg-gradient-to-br from-sky-100 via-blue-100 to-blue-200 flex items-center justify-center text-blue-600">
 
-                    <div class="pt-4 border-t border-slate-100">
-                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tarif Layanan</div>
-                        <div class="flex items-baseline gap-1.5 mt-0.5">
-                            <span class="text-2xl font-black text-slate-900">
-                                Rp {{ number_format($layanan->harga, 0, ',', '.') }}
-                            </span>
-                            <span class="text-xs font-bold text-slate-500">/ {{ $layanan->satuan }}</span>
-                        </div>
-                    </div>
+                    @if($isPickup)
+                        <svg class="w-16 h-16 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+                    @elseif($isKoin)
+                        <svg class="w-16 h-16 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    @else
+                        <svg class="w-16 h-16 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    @endif
+
+                    @if($gambarUrl)
+                        <img src="{{ $gambarUrl }}"
+                             alt="{{ $layanan->nama_layanan }}"
+                             loading="lazy"
+                             onerror="this.remove()"
+                             class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    @endif
+
+                    <span class="absolute top-3 right-3 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider border shadow-sm {{ $badgeClass }}">
+                        {{ $layanan->jenis_layanan }}
+                    </span>
                 </div>
 
-                <div class="mt-6 pt-4">
-                    @if(!$isKoin)
-                        <button type="button"
-                                onclick="pilihLayanan('{{ $layanan->id_layanan }}', '{{ addslashes($layanan->nama_layanan) }}', '{{ $layanan->harga }}', '{{ strtolower($layanan->satuan) }}')"
-                                class="w-full py-3.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-sm shadow-md shadow-blue-600/25 transition-all flex items-center justify-center gap-2">
-                            <span>Pesan Layanan Ini</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                        </button>
-                    @else
-                        <div class="w-full py-3.5 px-4 rounded-2xl bg-slate-100 text-slate-600 font-bold text-xs text-center border border-slate-200">
-                            Tersedia Langsung di Outlet (Self-Service)
+                {{-- ISI KARTU --}}
+                <div class="p-6 flex flex-col flex-1 justify-between">
+
+                    <div class="space-y-3">
+                        <div>
+                            <h3 class="text-xl font-black text-slate-900 group-hover:text-blue-700 transition-colors">
+                                {{ $layanan->nama_layanan }}
+                            </h3>
+                            <p class="text-sm text-slate-600 mt-2 leading-relaxed line-clamp-2 min-h-[2.8rem] font-medium">
+                                {{ $layanan->deskripsi ?? 'Layanan pencucian profesional dengan deterjen ramah serat kain dan hasil setrika rapi wangi.' }}
+                            </p>
                         </div>
-                    @endif
+
+                        <div class="pt-4 border-t border-slate-100">
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tarif Layanan</div>
+                            <div class="flex items-baseline gap-1.5 mt-0.5">
+                                <span class="text-2xl font-black text-slate-900">
+                                    Rp {{ number_format($layanan->harga, 0, ',', '.') }}
+                                </span>
+                                <span class="text-xs font-bold text-slate-500">/ {{ $layanan->satuan }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- TOMBOL / LABEL OUTLET: tinggi sama (h-12) supaya sejajar --}}
+                    <div class="mt-6">
+                        @if(!$isKoin)
+                            <button type="button"
+                                    onclick="pilihLayanan('{{ $layanan->id_layanan }}', '{{ addslashes($layanan->nama_layanan) }}', '{{ $layanan->harga }}', '{{ strtolower($layanan->satuan) }}')"
+                                    class="w-full h-12 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-sm shadow-md shadow-blue-600/25 transition-all flex items-center justify-center gap-2">
+                                <span>Pesan Layanan Ini</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                        @else
+                            <div class="w-full h-12 px-4 rounded-2xl bg-slate-100 text-slate-600 font-bold text-xs text-center border border-slate-200 flex items-center justify-center">
+                                Tersedia Langsung di Outlet (Self-Service)
+                            </div>
+                        @endif
+                    </div>
+
                 </div>
             </div>
         @endforeach

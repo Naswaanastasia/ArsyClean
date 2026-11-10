@@ -189,14 +189,14 @@
 
 <!-- MODAL SCAN QRIS MANUAL -->
 <div id="qrModalManual" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl space-y-4 my-6 border border-slate-200">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 text-center shadow-2xl space-y-4 my-6 border border-slate-200">
         <div class="flex justify-between items-center pb-2 border-b border-slate-100">
             <h3 class="text-lg font-black text-slate-900">Scan QRIS ArsyClean</h3>
             <button type="button" onclick="closeQrModalManual()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-sm">✕</button>
         </div>
 
         <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-            <img src="{{ asset('assets/images/qris_arsyclean.jpg') }}" alt="QRIS by_onest" class="mx-auto w-full max-w-[240px] rounded-xl shadow-md border border-slate-200">
+          <img src="{{ asset('assets/images/qris_arsyclean.jpg') }}" alt="QRIS by_onest" class="mx-auto w-full max-w-[340px] rounded-xl shadow-md border border-slate-200">
             <div class="mt-3 flex items-center justify-center gap-2">
                 <span class="px-2.5 py-0.5 bg-blue-100 text-blue-900 font-bold rounded text-[11px]">by_onest</span>
                 <span class="px-2.5 py-0.5 bg-slate-200 text-slate-800 font-mono text-[11px]">NMID: ID1025411758325</span>
