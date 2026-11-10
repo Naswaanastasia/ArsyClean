@@ -168,21 +168,6 @@
                             </div>
                         </a>
 
-                        <a href="{{ route('profile') }}"
-                           class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200 {{ request()->routeIs('profile') ? 'active' : '' }}">
-                            <div class="flex items-center gap-3">
-                                <span class="text-xl">👤</span>
-                                <span>Profil Saya</span>
-                            </div>
-                        </a>
-
-                        <a href="{{ route('home') }}"
-                           class="nav-item flex items-center justify-between px-3.5 py-3.5 rounded-2xl text-base font-bold text-slate-200">
-                            <div class="flex items-center gap-3">
-                                <span class="text-xl">🏠</span>
-                                <span>Halaman Utama</span>
-                            </div>
-                        </a>
                     @endif
                 </nav>
             </div>

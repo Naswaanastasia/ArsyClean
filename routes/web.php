@@ -180,11 +180,9 @@ Route::middleware(['auth', CheckRole::class . ':owner'])
         Route::get('/dashboard', [OwnerController::class, 'dashboard'])
             ->name('dashboard');
 
-        // Halaman Khusus Laporan Keuangan
         Route::get('/laporan', [OwnerController::class, 'laporan'])
             ->name('laporan');
 
-        // Halaman Khusus Pengelolaan Admin (Dipisahkan dari Dashboard)
         Route::get('/admin', [OwnerController::class, 'adminIndex'])
             ->name('admin.index');
 
@@ -194,14 +192,17 @@ Route::middleware(['auth', CheckRole::class . ':owner'])
         Route::delete('/admin/{idAdmin}', [OwnerController::class, 'destroyAdmin'])
             ->name('admin.destroy');
 
-        // Halaman Khusus Katalog & Tarif Layanan
+        // KATALOG LAYANAN OWNER
         Route::get('/layanan', [OwnerController::class, 'layanan'])
             ->name('layanan');
+
+        // TAMBAHKAN BARIS INI (ROUTE UNTUK TAMBAH LAYANAN BARU)
+        Route::post('/layanan', [OwnerController::class, 'storeLayanan'])
+            ->name('layanan.store');
 
         Route::post('/layanan/{idLayanan}', [OwnerController::class, 'updateLayanan'])
             ->name('layanan.update');
 
-        // Cetak Laporan Omzet & Keuangan PDF
         Route::get('/cetak-laporan', [OwnerController::class, 'cetakLaporanPdf'])
             ->name('cetak.laporan');
     });
