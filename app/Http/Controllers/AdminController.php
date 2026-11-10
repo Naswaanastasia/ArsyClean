@@ -23,12 +23,9 @@ class AdminController extends Controller
 
         // 1. Ambil seluruh pesanan non-koin beserta relasi terkait
         $pesanans = Pesanan::with(['layanan', 'pembayaran', 'user', 'pengiriman'])
-            ->whereHas('layanan', function ($query) {
-                $query->where('jenis_layanan', '!=', 'Koin');
-            })
+            ->nonKoin()
             ->orderByDesc('id_pesanan')
             ->get();
-
         // 2. Pesanan Masuk: pesanan baru yang belum diproses oleh admin
         $pesananMasuk = $pesanans->filter(function ($p) {
             return in_array($p->status_pesanan, [
@@ -62,8 +59,8 @@ class AdminController extends Controller
         $stoks = Stok::where('kategori', '!=', 'Koin')->get();
 
         $pembayarans = Pembayaran::with(['pesanan.user', 'pesanan.layanan'])
-            ->whereHas('pesanan.layanan', function ($query) {
-                $query->where('jenis_layanan', '!=', 'Koin');
+            ->whereHas('pesanan', function ($query) {
+                $query->nonKoin();
             })
             ->orderByDesc('id_pembayaran')
             ->get();
@@ -247,42 +244,37 @@ class AdminController extends Controller
 
         $pesanan = Pesanan::with('layanan')->findOrFail($idPesanan);
 
-        if ($pesanan->status_pesanan !== 'Diproses' && $pesanan->status_pesanan !== 'Menunggu Pembayaran' && $pesanan->status_pesanan !== 'Menunggu Verifikasi') {
-            return back()->with(
-                'error',
-                'Status pesanan tidak dapat diubah karena sudah selesai atau dibatalkan.'
-            );
+        $validasiStatus = $this->validasiStatusPesanan($pesanan);
+
+        if ($validasiStatus !== null) {
+            return back()->with('error', $validasiStatus);
         }
 
         $jenisLayanan = $pesanan->layanan
             ->map(fn($item) => strtolower($item->jenis_layanan ?? ''))
             ->toArray();
 
-        if (in_array('koin', $jenisLayanan)) {
-            return back()->with(
-                'error',
-                'Laundry Koin beroperasi mandiri dan tidak menggunakan tahapan pencucian manual.'
-            );
+        $validasiLayanan = $this->validasiJenisLayanan($jenisLayanan);
+
+        if ($validasiLayanan !== null) {
+            return back()->with('error', $validasiLayanan);
         }
 
         $statusTujuan = $request->status_laundry;
 
-        // Validasi pengiriman untuk non-pickup jika perlu
-        $isPickup = in_array('antar jemput', $jenisLayanan) || in_array('pickup', $jenisLayanan);
-        if (!$isPickup && in_array($statusTujuan, ['Siap Dikirim', 'Dalam Pengiriman'])) {
-            // Berikan catatan bila pesanan bukan antar jemput
-            return back()->with(
-                'error',
-                'Pilihan Siap Dikirim / Dalam Pengiriman khusus untuk layanan Antar Jemput.'
-            );
+        $validasiPengiriman = $this->validasiStatusPengiriman(
+            $jenisLayanan,
+            $statusTujuan
+        );
+
+        if ($validasiPengiriman !== null) {
+            return back()->with('error', $validasiPengiriman);
         }
 
         $pesanan->status_laundry = $statusTujuan;
-        $pesanan->status_pesanan = 'Diproses';
-
-        if ($statusTujuan === 'Selesai') {
-            $pesanan->status_pesanan = 'Selesai';
-        }
+        $pesanan->status_pesanan = $statusTujuan === 'Selesai'
+            ? 'Selesai'
+            : 'Diproses';
 
         $pesanan->save();
 
@@ -290,6 +282,54 @@ class AdminController extends Controller
             'success',
             "Status pengerjaan pesanan {$pesanan->kode_pesanan} berhasil diperbarui menjadi {$statusTujuan}."
         );
+    }
+
+    /**
+     * Memvalidasi apakah status pesanan masih dapat diperbarui.
+     */
+    private function validasiStatusPesanan($pesanan)
+    {
+        $statusDiizinkan = [
+            'Diproses',
+            'Menunggu Pembayaran',
+            'Menunggu Verifikasi',
+        ];
+
+        if (!in_array($pesanan->status_pesanan, $statusDiizinkan)) {
+            return 'Status pesanan tidak dapat diubah karena sudah selesai atau dibatalkan.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Memvalidasi jenis layanan agar Laundry Koin tidak menggunakan tahapan manual.
+     */
+    private function validasiJenisLayanan($jenisLayanan)
+    {
+        if (in_array('koin', $jenisLayanan)) {
+            return 'Laundry Koin beroperasi mandiri dan tidak menggunakan tahapan pencucian manual.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Memvalidasi penggunaan status pengiriman khusus layanan Antar Jemput.
+     */
+    private function validasiStatusPengiriman($jenisLayanan, $statusTujuan)
+    {
+        $isPickup = in_array('antar jemput', $jenisLayanan)
+            || in_array('pickup', $jenisLayanan);
+
+        if (
+            !$isPickup
+            && in_array($statusTujuan, ['Siap Dikirim', 'Dalam Pengiriman'])
+        ) {
+            return 'Pilihan Siap Dikirim / Dalam Pengiriman khusus untuk layanan Antar Jemput.';
+        }
+
+        return null;
     }
 
     /**

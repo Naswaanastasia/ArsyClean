@@ -40,6 +40,13 @@ class Pesanan extends Model
         'total_harga' => 'decimal:2',
     ];
 
+    public function scopeNonKoin($query)
+    {
+        return $query->whereHas('layanan', function ($query) {
+            $query->where('jenis_layanan', '!=', 'Koin');
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(
