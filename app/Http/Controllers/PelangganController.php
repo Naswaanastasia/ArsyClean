@@ -56,7 +56,11 @@ class PelangganController extends Controller
     public function layanan()
     {
         $user = Auth::user();
-        $layanans = Layanan::where('status', 'tersedia')->get();
+
+        $layanans = Layanan::with(['detailHarga'])
+            ->where('status', 'tersedia')
+            ->get();
+
         return view('pelanggan.layanan', compact('user', 'layanans'));
     }
 
@@ -112,7 +116,7 @@ class PelangganController extends Controller
         $daftarPakaian = [
             'kaos'          => ['nama' => 'Kaos / T-Shirt', 'gram' => 120],
             'kemeja'        => ['nama' => 'Kemeja', 'gram' => 150],
-            'celana_panjang'=> ['nama' => 'Celana Panjang / Jeans', 'gram' => 300],
+            'celana_panjang' => ['nama' => 'Celana Panjang / Jeans', 'gram' => 300],
             'celana_pendek' => ['nama' => 'Celana Pendek', 'gram' => 150],
             'jaket'         => ['nama' => 'Jaket / Sweater / Hoodie', 'gram' => 450],
             'pakaian_dalam' => ['nama' => 'Pakaian Dalam / Kaos Kaki', 'gram' => 50],
@@ -308,7 +312,7 @@ class PelangganController extends Controller
                 'status_pembayaran' => $pesanan->pembayaran->status_pembayaran,
                 'bukti_transfer'    => $pesanan->pembayaran->bukti_transfer ? asset('storage/' . $pesanan->pembayaran->bukti_transfer) : null,
             ] : null,
-            'layanan'            => $pesanan->layanan->map(function ($l) {
+            'layanan' => $pesanan->layanan->map(function ($l) {
                 return [
                     'nama_layanan' => $l->nama_layanan,
                     'harga'        => $l->harga,
