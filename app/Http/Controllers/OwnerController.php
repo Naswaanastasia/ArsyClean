@@ -19,12 +19,10 @@ class OwnerController extends Controller
         // 1. Query Dasar Pembayaran Lunas dengan Filter Tanggal
         $queryPembayaran = Pembayaran::where('status_pembayaran', 'Lunas');
 
-        if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
-            $queryPembayaran->whereBetween('created_at', [
-                $request->tanggal_mulai . ' 00:00:00',
-                $request->tanggal_selesai . ' 23:59:59'
-            ]);
-        }
+        $queryPembayaran = $this->terapkanFilterTanggal(
+            $queryPembayaran,
+            $request
+        );
 
         // Total omzet berdasarkan filter / keseluruhan
         $totalOmzet = (float) $queryPembayaran->sum('jumlah_bayar');
@@ -83,12 +81,9 @@ class OwnerController extends Controller
     public function laporan(Request $request)
     {
         $query = Pembayaran::with(['pesanan.user', 'pesanan.layanan']);
-        if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
-            $query->whereBetween('created_at', [
-                $request->tanggal_mulai . ' 00:00:00',
-                $request->tanggal_selesai . ' 23:59:59'
-            ]);
-        }
+
+        $query = $this->terapkanFilterTanggal($query, $request);
+
         $pembayarans = $query->orderByDesc('id_pembayaran')->get();
         $totalOmzet = (float) $pembayarans->where('status_pembayaran', 'Lunas')->sum('jumlah_bayar');
         return view('owner.laporan', compact('pembayarans', 'totalOmzet'));
@@ -204,16 +199,29 @@ class OwnerController extends Controller
         $queryPembayaran = Pembayaran::with(['pesanan.user', 'pesanan.layanan'])
             ->where('status_pembayaran', 'Lunas');
 
-        if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
-            $queryPembayaran->whereBetween('created_at', [
-                $request->tanggal_mulai . ' 00:00:00',
-                $request->tanggal_selesai . ' 23:59:59'
-            ]);
-        }
+        $queryPembayaran = $this->terapkanFilterTanggal(
+            $queryPembayaran,
+            $request
+        );
 
         $pembayarans = $queryPembayaran->orderBy('id_pembayaran', 'desc')->get();
         $totalOmzet = (float) $pembayarans->sum('jumlah_bayar');
 
         return view('owner.cetak_laporan', compact('pembayarans', 'totalOmzet'));
+    }
+
+    /**
+     * Menerapkan filter tanggal pada query pembayaran.
+     */
+    private function terapkanFilterTanggal($query, Request $request)
+    {
+        if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
+            $query->whereBetween('created_at', [
+                $request->tanggal_mulai . ' 00:00:00',
+                $request->tanggal_selesai . ' 23:59:59'
+            ]);
+        }
+
+        return $query;
     }
 }
