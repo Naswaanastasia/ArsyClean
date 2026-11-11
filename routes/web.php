@@ -116,6 +116,8 @@ Route::middleware(['auth', CheckRole::class . ':pelanggan'])
         // Kirim Ulasan Layanan
         Route::post('/ulasan/{idPesanan}', [PelangganController::class, 'storeUlasan'])
             ->name('ulasan.store');
+
+        Route::post('/pesanan/{id}/upload-bukti', [PelangganController::class, 'uploadBuktiPembayaran'])->name('pesanan.upload_bukti');
     });
 
 // ==========================================
@@ -137,6 +139,10 @@ Route::middleware(['auth', CheckRole::class . ':admin'])
 
         Route::get('/pembayaran', [AdminController::class, 'pembayaran'])
             ->name('pembayaran');
+
+        // ROUTE DETAIL PEMBAYARAN UNTUK MODAL ADMIN (DI SINI LOKASINYA):
+        Route::get('/pembayaran/{id}/detail', [AdminController::class, 'detailPembayaran'])
+            ->name('pembayaran.detail');
 
         Route::get('/pengiriman', [AdminController::class, 'pengiriman'])
             ->name('pengiriman');
@@ -196,7 +202,7 @@ Route::middleware(['auth', CheckRole::class . ':owner'])
         Route::get('/layanan', [OwnerController::class, 'layanan'])
             ->name('layanan');
 
-        // TAMBAHKAN BARIS INI (ROUTE UNTUK TAMBAH LAYANAN BARU)
+        // ROUTE UNTUK TAMBAH LAYANAN BARU
         Route::post('/layanan', [OwnerController::class, 'storeLayanan'])
             ->name('layanan.store');
 

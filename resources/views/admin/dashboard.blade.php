@@ -5,21 +5,6 @@
 @section('content')
 <div class="space-y-7">
 
-    {{-- NOTIFIKASI --}}
-    @if(session('success'))
-        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm font-black flex items-center gap-3 shadow-xs">
-            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-900 text-sm font-black flex items-center gap-3 shadow-xs">
-            <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-            <span>{{ session('error') }}</span>
-        </div>
-    @endif
-
     @if(isset($errors) && $errors->any())
         <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-900 text-sm font-semibold space-y-1 shadow-xs">
             <div class="font-black flex items-center gap-2">

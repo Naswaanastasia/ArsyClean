@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PelangganController extends Controller
 {
@@ -110,15 +112,15 @@ class PelangganController extends Controller
 
         // Daftar jenis pakaian dan estimasi berat (gram)
         $daftarPakaian = [
-            'kaos'          => ['nama' => 'Kaos / T-Shirt', 'gram' => 120],
-            'kemeja'        => ['nama' => 'Kemeja', 'gram' => 150],
-            'celana_panjang'=> ['nama' => 'Celana Panjang / Jeans', 'gram' => 300],
-            'celana_pendek' => ['nama' => 'Celana Pendek', 'gram' => 150],
-            'jaket'         => ['nama' => 'Jaket / Sweater / Hoodie', 'gram' => 450],
-            'pakaian_dalam' => ['nama' => 'Pakaian Dalam / Kaos Kaki', 'gram' => 50],
-            'baju_muslim'   => ['nama' => 'Gamis / Baju Muslim', 'gram' => 300],
-            'sprei'         => ['nama' => 'Sprei / Sarung Bantal', 'gram' => 400],
-            'lainnya'       => ['nama' => 'Pakaian / Item Lainnya', 'gram' => 150],
+            'kaos'           => ['nama' => 'Kaos / T-Shirt', 'gram' => 120],
+            'kemeja'         => ['nama' => 'Kemeja', 'gram' => 150],
+            'celana_panjang' => ['nama' => 'Celana Panjang / Jeans', 'gram' => 300],
+            'celana_pendek'  => ['nama' => 'Celana Pendek', 'gram' => 150],
+            'jaket'          => ['nama' => 'Jaket / Sweater / Hoodie', 'gram' => 450],
+            'pakaian_dalam'  => ['nama' => 'Pakaian Dalam / Kaos Kaki', 'gram' => 50],
+            'baju_muslim'    => ['nama' => 'Gamis / Baju Muslim', 'gram' => 300],
+            'sprei'          => ['nama' => 'Sprei / Sarung Bantal', 'gram' => 400],
+            'lainnya'        => ['nama' => 'Pakaian / Item Lainnya', 'gram' => 150],
         ];
 
         $totalPcs = 0;
@@ -140,14 +142,12 @@ class PelangganController extends Controller
         // Tentukan jumlah unit (kg atau pcs)
         if ($isKiloan) {
             if ($totalPcs > 0) {
-                // Estimasi kg dari total pakaian (dibulatkan ke 1 desimal, min 1 kg)
                 $beratKg = max(1.0, round($totalGram / 1000, 1));
                 $jumlah = $beratKg;
             } else {
                 $jumlah = max(1.0, (float) ($validated['jumlah'] ?? 1.0));
             }
         } else {
-            // Layanan per satuan (pcs)
             $jumlah = $totalPcs > 0 ? $totalPcs : max(1, (int) ($validated['jumlah'] ?? 1));
         }
 
@@ -241,8 +241,8 @@ class PelangganController extends Controller
         }
     }
 
-    /**
-     * Upload Bukti Pembayaran Manual
+   /**
+     * Upload Bukti Pembayaran Manual ke Supabase Storage (HTTP REST API Direct)
      */
     public function uploadBuktiPembayaran(Request $request, $idPesanan)
     {
@@ -262,20 +262,50 @@ class PelangganController extends Controller
             ->findOrFail($idPesanan);
 
         if ($request->hasFile($fileKey)) {
-            $path = $request->file($fileKey)->store('bukti_transfer', 'public');
+            $file = $request->file($fileKey);
+            $filename = 'bukti_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
-            if ($pesanan->pembayaran) {
-                $pesanan->pembayaran->update([
-                    'bukti_transfer'    => $path,
-                    'status_pembayaran' => 'Pending',
+            try {
+                $supabaseUrl = rtrim(env('SUPABASE_URL'), '/');
+                $bucket = env('SUPABASE_BUCKET', 'bukti-pembayaran');
+                $secretKey = env('SUPABASE_SECRET_ACCESS_KEY');
+
+                // Endpoint upload resmi API Supabase
+                $uploadApiEndpoint = "{$supabaseUrl}/storage/v1/object/{$bucket}/{$filename}";
+
+                // Kirim request ke Supabase menggunakan format Key baru (sb_secret_...)
+                $response = \Illuminate\Support\Facades\Http::withOptions([
+                    'verify' => false,
+                ])->withHeaders([
+                    'Authorization' => 'Bearer ' . $secretKey,
+                    'apikey'        => $secretKey,
+                    'Content-Type'  => $file->getMimeType(),
+                ])->withBody(file_get_contents($file->getRealPath()), $file->getMimeType())
+                  ->post($uploadApiEndpoint);
+
+                if ($response->failed()) {
+                    throw new \Exception('Supabase API Error: ' . $response->body());
+                }
+
+                // Susun URL Publik
+                $publicUrl = "{$supabaseUrl}/storage/v1/object/public/{$bucket}/{$filename}";
+
+                if ($pesanan->pembayaran) {
+                    $pesanan->pembayaran->update([
+                        'bukti_transfer'    => $publicUrl,
+                        'status_pembayaran' => 'Pending',
+                    ]);
+                }
+
+                $pesanan->update([
+                    'status_pesanan' => 'Menunggu Verifikasi',
                 ]);
+
+                return back()->with('success', "Bukti pembayaran pesanan #{$pesanan->kode_pesanan} berhasil diunggah!");
+
+            } catch (\Exception $e) {
+                return back()->with('error', 'Gagal upload ke Supabase: ' . $e->getMessage());
             }
-
-            $pesanan->update([
-                'status_pesanan' => 'Menunggu Verifikasi',
-            ]);
-
-            return back()->with('success', "Bukti pembayaran pesanan #{$pesanan->kode_pesanan} berhasil diunggah! Petugas admin akan segera memverifikasi pembayaran Anda.");
         }
 
         return back()->with('error', 'Gagal mengunggah file bukti pembayaran.');
@@ -289,6 +319,12 @@ class PelangganController extends Controller
         $pesanan = Pesanan::with(['layanan', 'pembayaran', 'user', 'pengiriman'])
             ->where('id_user', Auth::user()->id_user)
             ->findOrFail($idPesanan);
+
+        $buktiUrl = null;
+        if ($pesanan->pembayaran?->bukti_transfer) {
+            $bukti = $pesanan->pembayaran->bukti_transfer;
+            $buktiUrl = Str::startsWith($bukti, 'http') ? $bukti : asset('storage/' . $bukti);
+        }
 
         $dataPayload = [
             'id_pesanan'         => $pesanan->id_pesanan,
@@ -306,15 +342,16 @@ class PelangganController extends Controller
                 'kode_pembayaran'   => $pesanan->pembayaran->kode_pembayaran,
                 'jumlah_bayar'      => $pesanan->pembayaran->jumlah_bayar,
                 'status_pembayaran' => $pesanan->pembayaran->status_pembayaran,
-                'bukti_transfer'    => $pesanan->pembayaran->bukti_transfer ? asset('storage/' . $pesanan->pembayaran->bukti_transfer) : null,
+                'bukti_transfer'    => $buktiUrl,
             ] : null,
             'layanan'            => $pesanan->layanan->map(function ($l) {
+                $jumlah = $l->pivot->jumlah ?? 1;
                 return [
                     'nama_layanan' => $l->nama_layanan,
                     'harga'        => $l->harga,
                     'satuan'       => $l->satuan,
-                    'jumlah'       => $l->pivot->jumlah ?? 1,
-                    'subtotal'     => $l->pivot->subtotal ?? ($l->harga * ($l->pivot->jumlah ?? 1)),
+                    'jumlah'       => $jumlah,
+                    'subtotal'     => $l->pivot->subtotal ?? ($l->harga * $jumlah),
                 ];
             }),
             'pengiriman'         => $pesanan->pengiriman ? [

@@ -10,6 +10,7 @@ use App\Models\Pengiriman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
@@ -128,6 +129,45 @@ class AdminController extends Controller
     }
 
     /**
+     * API JSON: Detail Pembayaran untuk Modal Admin
+     */
+    public function detailPembayaran($idPembayaran)
+    {
+        $pembayaran = Pembayaran::with(['pesanan.user', 'pesanan.layanan'])->findOrFail($idPembayaran);
+
+        $buktiUrl = null;
+        if ($pembayaran->bukti_transfer) {
+            $bukti = $pembayaran->bukti_transfer;
+            
+            // Jika tersimpan URL lengkap (http/https), pakai langsung. Jika hanya nama file, rakit URL Supabase
+            if (Str::startsWith($bukti, 'http')) {
+                $buktiUrl = $bukti;
+            } else {
+                $baseUrl = rtrim(env('SUPABASE_URL'), '/');
+                $baseUrl = preg_replace('/\/storage\/v1\/object\/public.*$/', '', $baseUrl);
+                $bucket = env('SUPABASE_BUCKET', 'bukti-pembayaran');
+                $buktiUrl = $baseUrl . '/storage/v1/object/public/' . $bucket . '/' . ltrim($bukti, '/');
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id_pembayaran'     => $pembayaran->id_pembayaran,
+                'kode_pembayaran'   => $pembayaran->kode_pembayaran,
+                'kode_pesanan'      => $pembayaran->pesanan->kode_pesanan ?? '-',
+                'nama_pelanggan'    => $pembayaran->pesanan->user->nama ?? '-',
+                'jumlah_bayar'      => $pembayaran->jumlah_bayar,
+                'jumlah_bayar_fmt'  => 'Rp ' . number_format($pembayaran->jumlah_bayar, 0, ',', '.'),
+                'metode_pembayaran' => $pembayaran->metode_pembayaran,
+                'status_pembayaran' => $pembayaran->status_pembayaran,
+                'bukti_transfer'    => $buktiUrl,
+                'verifikator'       => $pembayaran->verifikator,
+            ]
+        ]);
+    }
+
+    /**
      * Halaman Khusus: Pengiriman & Kurir
      */
     public function pengiriman()
@@ -151,7 +191,6 @@ class AdminController extends Controller
         $stoks = Stok::orderBy('id_stok')->get();
         return view('admin.stok', compact('stoks'));
     }
-
 
     /**
      * MENERIMA PESANAN MASUK
@@ -270,7 +309,6 @@ class AdminController extends Controller
         // Validasi pengiriman untuk non-pickup jika perlu
         $isPickup = in_array('antar jemput', $jenisLayanan) || in_array('pickup', $jenisLayanan);
         if (!$isPickup && in_array($statusTujuan, ['Siap Dikirim', 'Dalam Pengiriman'])) {
-            // Berikan catatan bila pesanan bukan antar jemput
             return back()->with(
                 'error',
                 'Pilihan Siap Dikirim / Dalam Pengiriman khusus untuk layanan Antar Jemput.'
