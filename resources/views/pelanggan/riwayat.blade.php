@@ -129,27 +129,39 @@
                                         <span>Nota PDF</span>
                                     </a>
 
-                                    <!-- Tombol QRIS atau Upload Bukti Bayar jika Pending -->
-                                    @if(!$isBayarLunas && $p->status_pesanan !== 'Dibatalkan')
-                                        @if($p->metode_pembayaran === 'QRIS')
-                                            <button type="button"
-                                                    data-kode="{{ $p->kode_pesanan }}"
-                                                    data-total="{{ (int) round($p->total_harga) }}"
-                                                    data-id="{{ $p->id_pesanan }}"
-                                                    onclick="openQrModalManual(this)"
-                                                    class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow-xs transition-all">
-                                                Scan QRIS
-                                            </button>
-                                        @else
-                                            <button type="button"
-                                                    onclick="openUploadBukti('{{ $p->id_pesanan }}', '{{ $p->kode_pesanan }}')"
-                                                    class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs transition-all">
-                                                Upload Bukti
-                                            </button>
-                                        @endif
-                                    @endif
+                                 <!-- Tombol QRIS / Upload Bukti / Status Verifikasi -->
+@php
+    $sudahUpload = !empty($p->pembayaran?->bukti_transfer);
+@endphp
 
-                                    <!-- Beri Ulasan Jika Selesai -->
+@if(!$isBayarLunas && $p->status_pesanan !== 'Dibatalkan')
+    @if($sudahUpload)
+        <a href="{{ asset('storage/' . $p->pembayaran->bukti_transfer) }}"
+           target="_blank"
+           class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all">
+            Lihat Bukti
+        </a>
+        <span class="px-3 py-1.5 rounded-xl bg-sky-100 text-sky-900 border border-sky-300 font-black text-xs">
+            Menunggu Verifikasi
+        </span>
+    @elseif($p->metode_pembayaran === 'QRIS')
+        <button type="button"
+                data-kode="{{ $p->kode_pesanan }}"
+                data-total="{{ (int) round($p->total_harga) }}"
+                data-id="{{ $p->id_pesanan }}"
+                onclick="openQrModalManual(this)"
+                class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow-xs transition-all">
+            Scan QRIS
+        </button>
+    @else
+        <button type="button"
+                        onclick="openUploadBukti('{{ $p->id_pesanan }}', '{{ $p->kode_pesanan }}')"
+                        class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs transition-all">
+                    Upload Bukti
+                </button>
+            @endif
+        @endif
+                                            <!-- Beri Ulasan Jika Selesai -->
                                     @if($p->status_pesanan === 'Selesai' && !$p->ulasan)
                                         <button type="button"
                                                 onclick="openReviewModal('{{ $p->id_pesanan }}')"
@@ -251,7 +263,31 @@
         </form>
     </div>
 </div>
+<!-- MODAL ULASAN BINTANG -->
+<div id="reviewModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4 border border-slate-200">
+        <h3 class="text-xl font-black text-slate-900">Beri Ulasan Layanan</h3>
+        <p class="text-xs text-slate-500 font-medium">Bagikan pengalaman Anda menggunakan jasa laundry ArsyClean.</p>
 
+        <form id="reviewForm" method="POST" class="space-y-4">
+            @csrf
+            <input type="hidden" name="rating" id="reviewRating" value="5">
+
+            <div class="flex justify-center gap-2 text-3xl" id="reviewStars">
+                @for($i = 1; $i <= 5; $i++)
+                    <button type="button" data-star="{{ $i }}" onclick="setRating({{ $i }})" class="text-amber-400 hover:scale-110 transition-transform">★</button>
+                @endfor
+            </div>
+
+            <textarea name="komentar" rows="3" required placeholder="Tuliskan ulasan Anda (bersih, wangi, kurir tepat waktu)..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+
+            <div class="flex justify-end gap-2 pt-1">
+                <button type="button" onclick="closeReviewModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">Batal</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shadow-md">Kirim Ulasan</button>
+            </div>
+        </form>
+    </div>
+</div>
 @push('scripts')
 <script>
     function openDetailModal(id) {
@@ -311,9 +347,29 @@
         document.getElementById('uploadBuktiModal').classList.remove('hidden');
     }
 
-    function closeUploadBukti() {
+        function closeUploadBukti() {
         document.getElementById('uploadBuktiModal').classList.add('hidden');
+    }
+
+    function openReviewModal(id) {
+        document.getElementById('reviewForm').action = '{{ url("/pelanggan/ulasan") }}/' + id;
+        setRating(5);
+        document.getElementById('reviewModal').classList.remove('hidden');
+    }
+
+    function closeReviewModal() {
+        document.getElementById('reviewModal').classList.add('hidden');
+    }
+
+    function setRating(n) {
+        document.getElementById('reviewRating').value = n;
+        document.querySelectorAll('#reviewStars button').forEach(b => {
+            const val = parseInt(b.dataset.star);
+            b.classList.toggle('text-amber-400', val <= n);
+            b.classList.toggle('text-slate-300', val > n);
+        });
     }
 </script>
 @endpush
 @endsection
+

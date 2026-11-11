@@ -45,7 +45,7 @@
                     $gambarFile = $layanan->icon;
                 }
                 $gambarUrl = $gambarFile
-                    ? (str_starts_with($gambarFile, 'http') ? $gambarFile : asset('images/layanan/' . $gambarFile))
+                    ? (str_starts_with($gambarFile, 'http') ? $gambarFile : asset('assets/images/layanan/' . $gambarFile))
                     : null;
 
                 $badgeClass = $isPickup
